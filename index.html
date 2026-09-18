@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Beeline</title>
+  <meta
+    name="description"
+    content="Build words across a hexagonal letter board and connect all three pairs of opposite sides."
+  />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <main class="page-shell">
+    <header class="game-header">
+      <div>
+        <p class="eyebrow">Hex connection word puzzle</p>
+        <h1>Beeline</h1>
+      </div>
+      <button id="new-puzzle" class="secondary-button" type="button" disabled>
+        New puzzle
+      </button>
+    </header>
+
+    <p class="instructions">
+      Make words from touching letters. Every accepted word activates its tiles.
+      Connect each matching pair of board edges using as few words as possible.
+    </p>
+
+    <section id="loading" class="loading-panel" aria-live="polite">
+      Loading the dictionary…
+    </section>
+
+    <section id="game" hidden>
+      <div class="score-row" aria-label="Puzzle score">
+        <div class="score-card">
+          <span>Words used</span>
+          <strong id="score-value">0</strong>
+        </div>
+        <div class="score-card">
+          <span>Perfect</span>
+          <strong id="perfect-value">—</strong>
+        </div>
+      </div>
+
+      <div class="connection-row" aria-label="Required edge connections">
+        <div id="connection-a" class="connection-card pair-a">
+          <span class="pair-dot" aria-hidden="true"></span>
+          <span>Pair A</span>
+          <strong>Open</strong>
+        </div>
+        <div id="connection-b" class="connection-card pair-b">
+          <span class="pair-dot" aria-hidden="true"></span>
+          <span>Pair B</span>
+          <strong>Open</strong>
+        </div>
+        <div id="connection-c" class="connection-card pair-c">
+          <span class="pair-dot" aria-hidden="true"></span>
+          <span>Pair C</span>
+          <strong>Open</strong>
+        </div>
+      </div>
+
+      <div class="board-wrap">
+        <div class="edge-label edge-a edge-a-left" aria-hidden="true">A</div>
+        <div class="edge-label edge-a edge-a-right" aria-hidden="true">A</div>
+        <div class="edge-label edge-b edge-b-top" aria-hidden="true">B</div>
+        <div class="edge-label edge-b edge-b-bottom" aria-hidden="true">B</div>
+        <div class="edge-label edge-c edge-c-top" aria-hidden="true">C</div>
+        <div class="edge-label edge-c edge-c-bottom" aria-hidden="true">C</div>
+        <div id="board" class="board" role="group" aria-label="Beeline letter board"></div>
+      </div>
+
+      <section class="word-panel" aria-label="Current word">
+        <div id="current-word" class="current-word">Select a tile</div>
+
+        <label id="wildcard-control" class="wildcard-control" hidden>
+          Wildcard letter
+          <input
+            id="wildcard-letter"
+            type="text"
+            inputmode="text"
+            autocomplete="off"
+            maxlength="1"
+            aria-label="Letter represented by the wildcard"
+          />
+        </label>
+
+        <div class="button-row">
+          <button id="clear-path" class="secondary-button" type="button" disabled>
+            Clear
+          </button>
+          <button id="submit-word" class="primary-button" type="button" disabled>
+            Submit word
+          </button>
+        </div>
+
+        <p id="message" class="message" aria-live="polite"></p>
+      </section>
+
+      <section class="played-panel" aria-labelledby="played-heading">
+        <h2 id="played-heading">Accepted words</h2>
+        <p id="no-words">None yet.</p>
+        <ol id="played-words" class="played-words"></ol>
+      </section>
+
+      <details id="solution-details" class="solution-panel">
+        <summary>Reveal the Perfect words</summary>
+        <p>
+          This shows one exact minimum-word solution. Select a word to trace its path;
+          revealing it does not change your score.
+        </p>
+        <ol id="solution-words"></ol>
+      </details>
+    </section>
+  </main>
+
+  <script type="module" src="./build/main.js"></script>
+</body>
+</html>

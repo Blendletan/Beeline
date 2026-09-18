@@ -6,6 +6,7 @@
   "scripts": {
     "benchmark": "node scripts/benchmark.ts",
     "build": "tsc -p tsconfig.json",
+    "serve": "node scripts/serve.mjs",
     "test": "node --test src/game.test.ts"
   },
   "devDependencies": {

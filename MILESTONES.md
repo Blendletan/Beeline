@@ -33,13 +33,15 @@ The repository currently contains:
 - this roadmap;
 - `package.json`, `pnpm-lock.yaml`, and `tsconfig.json`: the minimal TypeScript toolchain;
 - `src/game.ts`: completed Milestones 1–3 game logic and exact solver;
+- `src/main.ts`, `index.html`, and `style.css`: the completed minimal playable browser interface;
 - `src/game.test.ts`: 19 focused rule, solver, and generation tests;
 - `scripts/benchmark.ts`: the reproducible full-dictionary solver benchmark;
-- `build/game.js`: generated compiler output, ignored by `.gitignore`.
+- `scripts/serve.mjs`: a dependency-free local static server;
+- `build/game.js` and `build/main.js`: generated compiler output, ignored by `.gitignore`.
 
-The directory is not currently a Git repository.
+The project is a Git repository backed up at <https://github.com/Blendletan/Beeline> on the `main` branch.
 
-Milestones 0–3 are complete and Milestone 4's pure generation work is complete. All 19 tests pass, strict TypeScript compilation succeeds, and representative full-dictionary boards have exact, replay-verified solutions. The browser entry point, its `DAILY_MODE` switch, and the playable interface do not exist yet.
+Milestones 0–5 are complete. All 19 tests pass, strict TypeScript compilation succeeds, representative full-dictionary boards have exact replay-verified solutions, and the complete browser play loop has been exercised with an optimal solution. `DAILY_MODE` remains `false` for playtesting, so each load and each New puzzle action creates a fresh verified board.
 
 ### SpellSweep relationship
 
@@ -403,40 +405,46 @@ Every returned benchmark answer replayed as legal submissions and completed its 
 - [x] Generate 60 ordinary letters and put the wildcard at the center.
 - [x] Reject candidates that fail the cheap solvability precheck.
 - [x] Run the exact solver for accepted candidates and retain their Perfect score and one solution.
-- [ ] Keep `const DAILY_MODE = false` as the sole mode switch.
-- [ ] In development mode, generate a fresh verified puzzle on each page load.
+- [x] Keep `const DAILY_MODE = false` as the sole mode switch.
+- [x] In development mode, generate a fresh verified puzzle on each page load.
 - [x] In daily mode, seed generation from the local date and reproduce the same board and solution on reload.
 - [x] Confirm that different development random inputs can produce different boards.
-- [ ] Measure the complete generation pipeline in the target browser.
+- [x] Measure the complete generation pipeline in the target browser.
 - [x] Measure the complete generation pipeline in Node before adding infrastructure.
 
 Completion criteria: every presented board has a known exact solution, development reloads produce fresh puzzles, and daily reloads are stable for the same local date.
 
-Implementation progress (September 18, 2026): `generateCandidateBoard`, `generateVerifiedPuzzle`, `seededRandom`, `localDateKey`, and `selectPuzzle` are implemented and tested. A constructed test proves that an impossible first candidate is rejected before a second board is exactly solved. Daily selection is reproducible, and injected development random sources produce different verified boards. The generated puzzle retains its board, Perfect score, optimal paths, attempt count, candidate counts, and search counts so the UI will not repeat solver work.
+Implementation result (September 18, 2026): `generateCandidateBoard`, `generateVerifiedPuzzle`, `seededRandom`, `localDateKey`, and `selectPuzzle` are implemented and tested. A constructed test proves that an impossible first candidate is rejected before a second board is exactly solved. Daily selection is reproducible, and injected development random sources produce different verified boards. The generated puzzle retains its board, Perfect score, optimal paths, attempt count, candidate counts, and search counts so the UI will not repeat solver work.
 
-Six additional weighted-random generation samples all succeeded on their first candidate. Generation excluding dictionary parsing took 69, 75, 82, 85, 222, and 950 ms; the slower sample was Perfect 4 and took about 1,027 ms on a verification rerun. Fresh dictionary parsing/indexing took roughly another 320–346 ms. All recorded answers replayed legally to completion. Browser measurement and the actual `DAILY_MODE` constant remain unchecked because `src/main.ts` does not exist yet; they should be completed as part of Milestone 5 rather than by creating an unused placeholder.
+Six additional weighted-random generation samples all succeeded on their first candidate. Generation excluding dictionary parsing took 69, 75, 82, 85, 222, and 950 ms; the slower sample was Perfect 4 and took about 1,027 ms on a verification rerun. Fresh dictionary parsing/indexing took roughly another 320–346 ms. All recorded answers replayed legally to completion.
+
+The target in-app browser generated three fresh one-attempt Perfect-3 boards in 91, 84, and 74 ms. Each reload produced a visibly different board. These measurements cover verified board selection after the dictionary has loaded and been indexed; the initial dictionary fetch and parse happen once per page load.
 
 ---
 
 ## Milestone 5: Minimal Playable Interface
 
-- [ ] Add `index.html`, `style.css`, and `src/main.ts` using ordinary browser APIs.
-- [ ] Render all 61 tiles as a visibly hexagonal board.
-- [ ] Make every tile a real accessible button.
-- [ ] Support click/tap path construction using the same simple interaction as SpellSweep.
-- [ ] Allow clicking the current final tile to remove it from the path.
-- [ ] Reject a nonadjacent next tile and explain why.
-- [ ] Show selection order and the candidate word.
-- [ ] Show one-letter wildcard input only when the selected path uses the center.
-- [ ] Provide clear-selection and submit controls.
-- [ ] Distinguish inactive, active, selected, center-wildcard, and revealed-solution states.
-- [ ] Show accepted words used, Perfect, and the status of all three side pairs.
-- [ ] Announce invalid words, accepted words, and completion clearly.
-- [ ] Provide a simple way to start a fresh development puzzle.
-- [ ] Optionally expose the known optimal paths for developer verification; a polished Reveal Answer flow is not required yet.
-- [ ] Verify the playable loop with mouse and touch-sized controls in a browser.
+- [x] Add `index.html`, `style.css`, and `src/main.ts` using ordinary browser APIs.
+- [x] Render all 61 tiles as a visibly hexagonal board.
+- [x] Make every tile a real accessible button.
+- [x] Support click/tap path construction using the same simple interaction as SpellSweep.
+- [x] Allow clicking the current final tile to remove it from the path.
+- [x] Reject a nonadjacent next tile and explain why.
+- [x] Show selection order and the candidate word.
+- [x] Show one-letter wildcard input only when the selected path uses the center.
+- [x] Provide clear-selection and submit controls.
+- [x] Distinguish inactive, active, selected, center-wildcard, and revealed-solution states.
+- [x] Show accepted words used, Perfect, and the status of all three side pairs.
+- [x] Announce invalid words, accepted words, and completion clearly.
+- [x] Provide a simple way to start a fresh development puzzle.
+- [x] Optionally expose the known optimal paths for developer verification; a polished Reveal Answer flow is not required yet.
+- [x] Verify the playable loop with mouse and touch-sized controls in a browser.
 
 Completion criteria: a person can load a verified puzzle, form and submit words, see the network grow, understand the three connection goals, finish the puzzle, and compare the result with Perfect without using developer tools.
+
+Implementation result (September 18, 2026): complete. The interface is one HTML file, one CSS file, and one direct-DOM TypeScript entry point. It shows the exact Perfect score, three independently updating edge-pair indicators, active and selected cells, numbered path order, conditional wildcard input, accepted words, and explicit error/success messages. The collapsed Perfect-solution panel lists the solver's words and lets a tester trace any solution path without changing the score.
+
+The browser verification replayed the displayed three-word optimal solution through the ordinary tile, wildcard, and submit controls. The board reached 3 words / Perfect 3, all three pair cards changed to Connected, and the completion message reported a Perfect score. Separate interaction checks confirmed nonadjacent-click rejection and removal by clicking the path's final tile. A fresh-puzzle action reset the score and produced a different verified board. Desktop and 390-by-844 viewport checks were readable, and the browser console reported no warnings or errors.
 
 ---
 
@@ -506,13 +514,13 @@ Completion criteria: the stable game is attractive, accessible, and deployed as 
 
 ## Next Work Session Starting Point
 
-Begin with Milestone 4, then proceed directly to the minimal interface in Milestone 5:
+Begin Milestone 6 with human playtesting. The playable prototype can be started with:
 
-1. Add `index.html`, `style.css`, and `src/main.ts` for the deliberately plain playable interface in Milestone 5.
-2. Put the single `const DAILY_MODE = false` switch near the top of `src/main.ts` and pass it directly to `selectPuzzle`.
-3. Load and index `dictionary.txt` once, generate one verified puzzle, retain its already-computed solution, and show a loading message while that work runs.
-4. Render axial coordinates as 61 positioned hexagonal buttons and add the same simple click/tap path interaction that worked in SpellSweep.
-5. Show active cells, selection order, wildcard input, score, Perfect, and the three connection statuses before adding any secondary feature.
-6. Run the local static site and measure generation in the target browser to finish Milestone 4's remaining browser-specific items.
+```text
+pnpm build
+pnpm serve
+```
 
-Do not begin with a tutorial, sharing, persistence, elaborate animation, branding, or deployment.
+Then open <http://127.0.0.1:4173/>. `DAILY_MODE` is intentionally `false`, so New puzzle and page reloads both provide fresh verified boards. The collapsed Perfect-solution panel is a debugging aid; leave it closed for an honest playtest.
+
+Record concrete observations about puzzle difficulty, obscure dictionary words, the usefulness of two-letter words, clarity of the three edge-pair goals, and comfort of path entry before changing rules or polishing the presentation. Do not begin tutorials, sharing, persistence, elaborate animation, branding, deployment, or performance architecture until playtesting supplies a reason.

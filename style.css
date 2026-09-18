@@ -1,0 +1,475 @@
+:root {
+  color-scheme: light;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  color: #17231f;
+  background: #f3f1e8;
+  --paper: #fffdf5;
+  --ink-soft: #56615d;
+  --border: #c8ccc3;
+  --inactive: #e5e4da;
+  --active: #9fd2bf;
+  --active-border: #2d725b;
+  --selected: #ffd86f;
+  --selected-border: #936a00;
+  --pair-a: #c15442;
+  --pair-b: #2c6aa0;
+  --pair-c: #6e5792;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 300px;
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top, rgb(255 255 255 / 75%), transparent 34rem),
+    #f3f1e8;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button {
+  touch-action: manipulation;
+}
+
+.page-shell {
+  width: min(100% - 2rem, 720px);
+  margin: 0 auto;
+  padding: 1.5rem 0 3rem;
+}
+
+.game-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.2rem;
+  color: #68736f;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+h1 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(2.3rem, 9vw, 4.2rem);
+  font-weight: 700;
+  line-height: 0.95;
+}
+
+.instructions {
+  max-width: 62ch;
+  margin: 1rem 0 1.25rem;
+  color: var(--ink-soft);
+  line-height: 1.5;
+}
+
+.loading-panel,
+.word-panel,
+.played-panel,
+.solution-panel {
+  border: 1px solid var(--border);
+  border-radius: 0.8rem;
+  background: var(--paper);
+  box-shadow: 0 0.2rem 0.7rem rgb(45 55 50 / 7%);
+}
+
+.loading-panel {
+  padding: 1rem;
+}
+
+.score-row,
+.connection-row {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.score-row {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.score-card,
+.connection-card {
+  border: 1px solid var(--border);
+  border-radius: 0.7rem;
+  background: var(--paper);
+}
+
+.score-card {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 0.65rem 0.85rem;
+  color: var(--ink-soft);
+}
+
+.score-card strong {
+  color: #17231f;
+  font-size: 1.4rem;
+}
+
+.connection-row {
+  grid-template-columns: repeat(3, 1fr);
+  margin-top: 0.65rem;
+}
+
+.connection-card {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0.1rem 0.45rem;
+  padding: 0.55rem 0.65rem;
+  color: var(--ink-soft);
+  font-size: 0.8rem;
+}
+
+.connection-card strong {
+  grid-column: 2;
+  color: #6d756f;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+}
+
+.connection-card.connected {
+  border-color: var(--active-border);
+  background: #e8f4ed;
+}
+
+.connection-card.connected strong {
+  color: #226047;
+}
+
+.pair-dot {
+  grid-row: span 2;
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.pair-a .pair-dot,
+.edge-a {
+  color: var(--pair-a);
+}
+
+.pair-b .pair-dot,
+.edge-b {
+  color: var(--pair-b);
+}
+
+.pair-c .pair-dot,
+.edge-c {
+  color: var(--pair-c);
+}
+
+.board-wrap {
+  position: relative;
+  width: min(96vw, 520px);
+  margin: 0.75rem auto;
+  aspect-ratio: 1;
+}
+
+.board {
+  position: absolute;
+  inset: 0;
+}
+
+.tile {
+  position: absolute;
+  left: var(--left);
+  top: var(--top);
+  display: grid;
+  width: 11.5%;
+  padding: 0;
+  aspect-ratio: 2 / 1.732;
+  place-items: center;
+  transform: translate(-50%, -50%);
+  border: 0;
+  clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
+  background: var(--inactive);
+  color: #26332e;
+  cursor: pointer;
+  font-size: clamp(0.73rem, 3.4vw, 1.2rem);
+  font-weight: 800;
+  text-transform: uppercase;
+  transition: background-color 100ms ease, transform 100ms ease;
+}
+
+.tile::before {
+  position: absolute;
+  inset: 4%;
+  border: 2px solid #9ba199;
+  clip-path: inherit;
+  content: "";
+}
+
+.tile:hover:not(:disabled) {
+  transform: translate(-50%, -50%) scale(1.06);
+}
+
+.tile:focus-visible {
+  z-index: 4;
+  outline: 3px solid #17231f;
+  outline-offset: 3px;
+}
+
+.tile.active {
+  background: var(--active);
+  color: #153c30;
+}
+
+.tile.active::before {
+  border-color: var(--active-border);
+}
+
+.tile.selected {
+  z-index: 3;
+  background: var(--selected);
+  color: #4d3800;
+}
+
+.tile.selected::before {
+  border-color: var(--selected-border);
+  border-width: 3px;
+}
+
+.tile.revealed {
+  z-index: 2;
+  background: #d9c7ed;
+  color: #352248;
+}
+
+.tile.revealed::before {
+  border-color: #78529a;
+  border-width: 3px;
+}
+
+.tile.wildcard {
+  font-size: clamp(0.9rem, 4vw, 1.45rem);
+}
+
+.tile:disabled {
+  cursor: default;
+}
+
+.path-order {
+  position: absolute;
+  right: 12%;
+  bottom: 10%;
+  min-width: 1.05rem;
+  border-radius: 999px;
+  background: #3f3107;
+  color: white;
+  font-size: 0.58rem;
+  font-weight: 700;
+  line-height: 1.05rem;
+  text-align: center;
+}
+
+.edge-label {
+  position: absolute;
+  z-index: 5;
+  display: grid;
+  width: 1.6rem;
+  height: 1.6rem;
+  place-items: center;
+  transform: translate(-50%, -50%);
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  background: var(--paper);
+  font-size: 0.75rem;
+  font-weight: 900;
+}
+
+.edge-a-left { left: 7%; top: 50%; }
+.edge-a-right { left: 93%; top: 50%; }
+.edge-b-top { left: 74%; top: 6%; }
+.edge-b-bottom { left: 26%; top: 94%; }
+.edge-c-top { left: 26%; top: 6%; }
+.edge-c-bottom { left: 74%; top: 94%; }
+
+.word-panel,
+.played-panel,
+.solution-panel {
+  padding: 0.9rem;
+}
+
+.current-word {
+  min-height: 2rem;
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: clamp(1.05rem, 5vw, 1.5rem);
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-align: center;
+}
+
+.wildcard-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  margin: 0.65rem 0;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.wildcard-control[hidden] {
+  display: none;
+}
+
+.wildcard-control input {
+  width: 2.6rem;
+  padding: 0.35rem;
+  border: 2px solid var(--border);
+  border-radius: 0.45rem;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.button-row {
+  display: flex;
+  justify-content: center;
+  gap: 0.65rem;
+  margin-top: 0.75rem;
+}
+
+.primary-button,
+.secondary-button {
+  min-height: 2.5rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: 0.55rem;
+  cursor: pointer;
+  font-weight: 750;
+}
+
+.primary-button {
+  border: 1px solid #154f3d;
+  background: #236f56;
+  color: white;
+}
+
+.secondary-button {
+  border: 1px solid #9fa59e;
+  background: #fffef8;
+  color: #2f3b36;
+}
+
+.primary-button:disabled,
+.secondary-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.message {
+  min-height: 1.4rem;
+  margin: 0.75rem 0 0;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.message.error {
+  color: #9a3022;
+}
+
+.message.success {
+  color: #216347;
+  font-weight: 700;
+}
+
+.played-panel,
+.solution-panel {
+  margin-top: 0.75rem;
+}
+
+.played-panel h2 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.played-panel p,
+.solution-panel p {
+  margin: 0.45rem 0 0;
+  color: var(--ink-soft);
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.played-words,
+.solution-panel ol {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem 1.6rem;
+  margin: 0.55rem 0 0;
+  padding-left: 1.4rem;
+}
+
+.played-words:empty {
+  display: none;
+}
+
+.solution-panel summary {
+  cursor: pointer;
+  font-weight: 750;
+}
+
+.solution-word {
+  padding: 0.12rem 0.35rem;
+  border: 1px solid #b5a2c7;
+  border-radius: 0.35rem;
+  background: #f8f2ff;
+  color: #412957;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 750;
+}
+
+.solution-word:hover,
+.solution-word:focus-visible {
+  background: #eadcf7;
+}
+
+@media (max-width: 470px) {
+  .page-shell {
+    width: min(100% - 1rem, 720px);
+    padding-top: 0.8rem;
+  }
+
+  .game-header {
+    align-items: flex-end;
+  }
+
+  .connection-card {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    padding: 0.45rem 0.2rem;
+    text-align: center;
+  }
+
+  .connection-card .pair-dot {
+    grid-row: auto;
+  }
+
+  .connection-card strong {
+    grid-column: auto;
+  }
+
+  .board-wrap {
+    margin-top: 0.35rem;
+    margin-bottom: 0.35rem;
+  }
+}

@@ -9,5 +9,5 @@
     "strict": true,
     "noEmitOnError": true
   },
-  "include": ["src/game.ts"]
+  "include": ["src/game.ts", "src/main.ts"]
 }
