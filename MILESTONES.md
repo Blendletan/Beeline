@@ -37,9 +37,10 @@ The repository currently contains:
 - `src/game.test.ts`: 19 focused rule, solver, and generation tests;
 - `scripts/benchmark.ts`: the reproducible full-dictionary solver benchmark;
 - `scripts/serve.mjs`: a dependency-free local static server;
+- `.github/workflows/pages.yml`: the GitHub Pages test, build, and deployment workflow;
 - `build/game.js` and `build/main.js`: generated compiler output, ignored by `.gitignore`.
 
-The project is a Git repository backed up at <https://github.com/Blendletan/Beeline> on the `main` branch.
+The project is a Git repository backed up at <https://github.com/Blendletan/Beeline> on the `main` branch and deployed at <https://blendletan.github.io/Beeline/>.
 
 Milestones 0–5 are complete. All 19 tests pass, strict TypeScript compilation succeeds, representative full-dictionary boards have exact replay-verified solutions, and the complete browser play loop has been exercised with an optimal solution. `DAILY_MODE` remains `false` for playtesting, so each load and each New puzzle action creates a fresh verified board.
 
@@ -488,12 +489,14 @@ Completion criteria: either the measured game already performs acceptably and no
 - [ ] Verify keyboard operation, focus visibility, screen-reader labels, and reduced-motion behavior if motion is added.
 - [ ] Add only those transitions or animations that make state changes easier to understand.
 - [ ] Decide whether tutorial, answer reveal, persistence, and result sharing are worthwhile based on playtesting.
-- [ ] Keep all asset and module paths compatible with a GitHub Pages project subdirectory.
-- [ ] Add the smallest understandable GitHub Pages deployment workflow.
+- [x] Keep all asset and module paths compatible with a GitHub Pages project subdirectory.
+- [x] Add the smallest understandable GitHub Pages deployment workflow.
 - [ ] Set the intended release value of `DAILY_MODE` with a one-line change.
-- [ ] Build and test the deployed static site.
+- [x] Build and test the deployed static site.
 
 Completion criteria: the stable game is attractive, accessible, and deployed as a static site without a backend or unnecessary application framework.
+
+Deployment progress (September 18, 2026): the small GitHub Actions workflow runs the 19 tests, compiles TypeScript, assembles only the static browser assets, and deploys them through GitHub Pages. The first successful run completed in 46 seconds. The public `/Beeline/` URL loaded the dictionary and compiled modules correctly, generated a verified Perfect-4 board, accepted tile interaction, and reported no browser console warnings or errors. Deployment is complete, while Milestone 8 remains open because visual polish and the final `DAILY_MODE` decision intentionally follow playtesting.
 
 ---
 
@@ -522,5 +525,7 @@ pnpm serve
 ```
 
 Then open <http://127.0.0.1:4173/>. `DAILY_MODE` is intentionally `false`, so New puzzle and page reloads both provide fresh verified boards. The collapsed Perfect-solution panel is a debugging aid; leave it closed for an honest playtest.
+
+The same development-mode build is publicly playable at <https://blendletan.github.io/Beeline/>. Every push to `main` runs the tests and compiler before GitHub Pages deployment.
 
 Record concrete observations about puzzle difficulty, obscure dictionary words, the usefulness of two-letter words, clarity of the three edge-pair goals, and comfort of path entry before changing rules or polishing the presentation. Do not begin tutorials, sharing, persistence, elaborate animation, branding, deployment, or performance architecture until playtesting supplies a reason.
