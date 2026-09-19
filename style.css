@@ -11,7 +11,6 @@
   --active: #9fd2bf;
   --active-border: #2d725b;
   --selected: #ffd86f;
-  --selected-border: #936a00;
   --pair-a: #c15442;
   --pair-b: #2c6aa0;
   --pair-c: #6e5792;
@@ -207,14 +206,6 @@ h1 {
   transition: background-color 100ms ease, transform 100ms ease;
 }
 
-.tile::before {
-  position: absolute;
-  inset: 4%;
-  border: 2px solid #9ba199;
-  clip-path: inherit;
-  content: "";
-}
-
 .tile:hover:not(:disabled) {
   transform: translate(-50%, -50%) scale(1.06);
 }
@@ -230,30 +221,16 @@ h1 {
   color: #153c30;
 }
 
-.tile.active::before {
-  border-color: var(--active-border);
-}
-
 .tile.selected {
   z-index: 3;
   background: var(--selected);
   color: #4d3800;
 }
 
-.tile.selected::before {
-  border-color: var(--selected-border);
-  border-width: 3px;
-}
-
 .tile.revealed {
   z-index: 2;
   background: #d9c7ed;
   color: #352248;
-}
-
-.tile.revealed::before {
-  border-color: #78529a;
-  border-width: 3px;
 }
 
 .tile.wildcard {
