@@ -175,7 +175,10 @@ function submitSelection(): void {
       game.wordsUsed === puzzle.perfect
         ? "Perfect score!"
         : `${game.wordsUsed - puzzle.perfect} over Perfect.`;
-    showMessage(`All three pairs connected in ${game.wordsUsed} words. ${comparison}`, "success");
+    showMessage(
+      `Opposite sides connected in ${game.wordsUsed} words. ${comparison}`,
+      "success",
+    );
   } else {
     showMessage(`${word.toUpperCase()} accepted.`, "success");
   }

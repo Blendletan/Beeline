@@ -25,6 +25,8 @@ The early milestones deliberately use a small number of focused tests, then move
 
 Recorded September 18, 2026.
 
+The `codex/any-opposite-side-pair` playtest branch, added September 19, 2026, changes the objective so that connecting any one opposite-side pair wins. The exact solver, puzzle verification, rules, tests, and interface copy all use that same experimental condition.
+
 The repository currently contains:
 
 - `AGENTS.md`: development philosophy and project constraints;
@@ -98,15 +100,15 @@ These decisions should be treated as current requirements unless the user explic
 
 - Every tile in an accepted word becomes active permanently.
 - Adjacent active tiles are connected even when different words activated them.
-- Victory requires an active path across each of the three opposite-side pairs.
-- The three required crossings are checked independently. They may share a component, but they do not have to be three separate paths or three separate components.
+- Victory requires an active path across any one of the three opposite-side pairs.
+- The three possible crossings are checked independently, and the first successful crossing completes the puzzle.
 - A submitted word can complete more than one side pair at once.
 
 ### Score and optimal solution
 
 - Score is the number of accepted words used before victory.
 - Lower is better.
-- `Perfect` is the exact minimum number of valid word paths whose combined active tiles satisfy all three crossings.
+- `Perfect` is the exact minimum number of valid word paths whose combined active tiles satisfy at least one crossing.
 - The implementation must find an exact solution, not merely a greedy or approximate one.
 - If no collection of valid word paths can win, the board is unsolvable and must not be presented as a playable puzzle.
 - The solver should return one deterministic optimal solution when several solutions tie.
@@ -223,7 +225,7 @@ A successful submission should:
 2. copy and update the active-tile array;
 3. increment `wordsUsed` exactly once;
 4. recompute the three connection results;
-5. mark the game completed when all three are satisfied.
+5. mark the game completed when any one is satisfied.
 
 Do not mutate the prior `GameState`. This makes tests and UI updates straightforward without creating a state-management abstraction.
 
@@ -234,7 +236,7 @@ Implement one simple breadth-first or depth-first traversal over active neighbor
 1. Start from every active tile on one side.
 2. Traverse only active neighbors.
 3. Succeed if any reached tile lies on the opposite side.
-4. Win only if all three pair checks succeed.
+4. Win if any one pair check succeeds.
 
 Use the same win predicate for normal play and solver masks so the solver cannot silently disagree with the game.
 
@@ -365,7 +367,7 @@ Implementation result (September 18, 2026): complete. The parser reads all 178,6
 ## Milestone 3: Connections, Solvability, and Exact Perfect Solver
 
 - [x] Implement the shared active-mask connection check for each opposite-side pair.
-- [x] Implement completion when all three pair checks succeed.
+- [x] Implement completion when any one pair check succeeds on the experimental branch.
 - [x] Check the three pairs independently without imposing a separate-component or single-component rule.
 - [x] Convert enumerated word paths to 61-bit `bigint` masks.
 - [x] Implement identical-mask candidate reduction.
@@ -441,7 +443,7 @@ The target in-app browser generated three fresh one-attempt Perfect-3 boards in 
 - [x] Optionally expose the known optimal paths for developer verification; a polished Reveal Answer flow is not required yet.
 - [x] Verify the playable loop with mouse and touch-sized controls in a browser.
 
-Completion criteria: a person can load a verified puzzle, form and submit words, see the network grow, understand the three connection goals, finish the puzzle, and compare the result with Perfect without using developer tools.
+Completion criteria: a person can load a verified puzzle, form and submit words, see the network grow, understand the three possible connection goals, finish the puzzle, and compare the result with Perfect without using developer tools.
 
 Implementation result (September 18, 2026): complete. The interface is one HTML file, one CSS file, and one direct-DOM TypeScript entry point. It shows the exact Perfect score, three independently updating edge-pair indicators, active and selected cells, numbered path order, conditional wildcard input, accepted words, and explicit error/success messages. The collapsed Perfect-solution panel lists the solver's words and lets a tester trace any solution path without changing the score.
 
@@ -455,10 +457,11 @@ The browser verification replayed the displayed three-word optimal solution thro
 - [ ] Record whether boards are too easy, too difficult, repetitive, or dominated by obscure dictionary words.
 - [ ] Compare human scores with Perfect and assess whether Perfect feels plausible and useful.
 - [ ] Observe whether two-letter words create interesting rescue plays or merely noise.
-- [ ] Observe whether side/corner indicators make all three objectives understandable.
+- [ ] Observe whether side/corner indicators make the three possible objectives and the any-one win condition understandable.
 - [ ] Observe whether click-based path entry is comfortable on desktop and mobile.
-- [ ] Record rule changes explicitly in `BeelineRules.md` and this roadmap before changing code.
+- [x] Record this experimental rule change explicitly in `BeelineRules.md` and this roadmap.
 - [ ] Prefer changing or deleting code over preserving an abstraction made obsolete by playtesting.
+- [x] Add an experimental branch where connecting any one opposite-side pair wins, with matching gameplay, solver, generation, documentation, and interface behavior.
 
 Completion criteria: there is concrete playtest evidence about whether Beeline is fun and which rules or generation choices need adjustment.
 

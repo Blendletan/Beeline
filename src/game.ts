@@ -303,7 +303,7 @@ export function submitWord(
       active,
       wordsUsed: state.wordsUsed + 1,
       connections,
-      completed: connections.every(Boolean),
+      completed: connections.some(Boolean),
     },
   };
 }
@@ -337,7 +337,7 @@ export function connectionStatusForMask(mask: bigint): ConnectionStatus {
 }
 
 export function isWinningMask(mask: bigint): boolean {
-  return connectionStatusForMask(mask).every(Boolean);
+  return connectionStatusForMask(mask).some(Boolean);
 }
 
 export function visitValidWordPaths(

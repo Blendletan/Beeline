@@ -6,7 +6,7 @@
   <title>Beeline</title>
   <meta
     name="description"
-    content="Build words across a hexagonal letter board and connect all three pairs of opposite sides."
+    content="Build words across a hexagonal letter board and connect any pair of opposite sides."
   />
   <link rel="stylesheet" href="./style.css" />
 </head>
@@ -24,7 +24,7 @@
 
     <p class="instructions">
       Make words from touching letters. Every accepted word activates its tiles.
-      Connect each matching pair of board edges using as few words as possible.
+      Connect any matching pair of board edges using as few words as possible.
     </p>
 
     <section id="loading" class="loading-panel" aria-live="polite">
@@ -43,7 +43,7 @@
         </div>
       </div>
 
-      <div class="connection-row" aria-label="Required edge connections">
+      <div class="connection-row" aria-label="Opposite edge connections; any one completes the puzzle">
         <div id="connection-a" class="connection-card pair-a">
           <span class="pair-dot" aria-hidden="true"></span>
           <span>Pair A</span>

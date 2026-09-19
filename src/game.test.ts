@@ -212,12 +212,14 @@ test("invalid submissions have no effect and repeated valid words still count", 
   const repeated = submitWord(first.state, path, "at", new Set(["at"]));
   assert.equal(first.accepted, true);
   assert.equal(first.state.wordsUsed, 1);
+  assert.equal(first.state.completed, false);
   assert.deepEqual(
     first.state.active.flatMap((isActive, index) => (isActive ? [index] : [])),
     path,
   );
   assert.equal(repeated.accepted, true);
   assert.equal(repeated.state.wordsUsed, 2);
+  assert.equal(repeated.state.completed, false);
   assert.deepEqual(repeated.state.active, first.state.active);
 });
 
@@ -230,24 +232,33 @@ test("a diameter connects two side pairs because its endpoints are corners", () 
   assert.deepEqual(connectionStatus(active), [true, false, true]);
 });
 
-test("accepted words combine into the active network and complete immediately", () => {
-  const { board, firstPath, secondPath } = twoLineBoard();
-  const dictionary = new Set(["aaaaaaaaa", "bbbbbbbbb"]);
-  const first = submitWord(createGame(board), firstPath, "aaaaaaaaa", dictionary);
-  const second = submitWord(first.state, secondPath, "bbbbbbbbb", dictionary);
+test("accepted words combine and complete after any opposite-side pair connects", () => {
+  const diameter = qDiameter();
+  const firstPath = diameter.slice(0, 5);
+  const secondPath = diameter.slice(4);
+  const board = boardWith(
+    Object.fromEntries([
+      ...firstPath.map((index) => [index, "a"]),
+      ...secondPath.map((index) => [index, "b"]),
+      [WILDCARD_INDEX, "?"],
+    ]),
+  );
+  const dictionary = new Set(["aaaaa", "bbbbb"]);
+  const first = submitWord(createGame(board), firstPath, "aaaaa", dictionary);
+  const second = submitWord(first.state, secondPath, "bbbbb", dictionary);
 
   assert.equal(first.accepted, true);
-  assert.deepEqual(first.state.connections, [true, false, true]);
+  assert.deepEqual(first.state.connections, [false, false, false]);
   assert.equal(first.state.completed, false);
   assert.equal(second.accepted, true);
-  assert.deepEqual(second.state.connections, [true, true, true]);
+  assert.deepEqual(second.state.connections, [true, false, true]);
   assert.equal(second.state.completed, true);
   assert.equal(second.state.wordsUsed, 2);
 
   const afterCompletion = submitWord(
     second.state,
     firstPath,
-    "aaaaaaaaa",
+    "aaaaa",
     dictionary,
   );
   assert.equal(afterCompletion.accepted, false);
@@ -284,14 +295,14 @@ test("the exact solver finds a one-word perimeter solution", () => {
   assert.equal(isValidWord(board, result.solution![0].path, word, dictionary.words), true);
 });
 
-test("the exact solver finds and verifies a two-word crossing solution", () => {
+test("the exact solver finds and verifies a one-pair crossing solution", () => {
   const { board } = twoLineBoard();
   const dictionary = createDictionaryIndex(
     new Set(["aaaaaaaaa", "bbbbbbbbb"]),
   );
   const result = findMinimumWordSolution(board, dictionary);
 
-  assert.equal(result.solution?.length, 2);
+  assert.equal(result.solution?.length, 1);
   let game = createGame(board);
   for (const { word, path } of result.solution ?? []) {
     assert.equal(isValidWord(board, path, word, dictionary.words), true);
@@ -300,7 +311,7 @@ test("the exact solver finds and verifies a two-word crossing solution", () => {
     game = submission.state;
   }
   assert.equal(game.completed, true);
-  assert.equal(game.wordsUsed, 2);
+  assert.equal(game.wordsUsed, 1);
 });
 
 test("the solver reports a board whose playable union cannot win as unsolvable", () => {
@@ -311,7 +322,7 @@ test("the solver reports a board whose playable union cannot win as unsolvable",
   assert.equal(findMinimumWordSolution(board, dictionary).solution, null);
 });
 
-test("minimum search is deterministic and ignores a large unhelpful candidate", () => {
+test("minimum search deterministically chooses one winning pair and ignores a decoy", () => {
   const first: WordPath = { word: "alpha", path: qDiameter() };
   const second: WordPath = { word: "beta", path: rDiameter() };
   const interior = HEX_COORDINATES.flatMap(({ q, r, s }, index) =>
@@ -321,16 +332,16 @@ test("minimum search is deterministic and ignores a large unhelpful candidate", 
 
   const forward = minimumConnectionSolution([decoy, second, first]);
   const reverse = minimumConnectionSolution([first, second, decoy]);
-  const winningTiles = new Set([...first.path, ...second.path]);
+  const winningTiles = new Set(first.path);
 
-  assert.deepEqual(forward.solution, [first, second]);
+  assert.deepEqual(forward.solution, [first]);
   assert.deepEqual(reverse.solution, forward.solution);
   assert.equal(forward.solution?.includes(decoy), false);
   assert.deepEqual(
     connectionStatus(
       Array.from({ length: TILE_COUNT }, (_, index) => winningTiles.has(index)),
     ),
-    [true, true, true],
+    [true, false, true],
   );
 });
 
@@ -372,8 +383,8 @@ test("verified generation rejects an impossible candidate before solving", () =>
 
   assert.equal(puzzle.attempts, 2);
   assert.deepEqual(puzzle.board, solvableBoard);
-  assert.equal(puzzle.perfect, 2);
-  assert.equal(puzzle.solution.length, 2);
+  assert.equal(puzzle.perfect, 1);
+  assert.equal(puzzle.solution.length, 1);
 });
 
 test("seeded random values and daily puzzle selection are reproducible", () => {

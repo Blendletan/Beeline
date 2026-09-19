@@ -4,15 +4,15 @@
 
 The board is a regular hexagon with **5 tiles on each side** (61 tiles total).
 
-The six edges form **three pairs of opposite sides**. The goal is to use valid words to create connected paths joining **all three pairs of opposite sides**, while using as few words as possible.
+The six edges form **three pairs of opposite sides**. The goal is to use valid words to create a connected path joining **any one pair of opposite sides**, while using as few words as possible.
 
-In other words, the player must eventually connect:
+In other words, the player may win by connecting:
 
-- Side A to the opposite Side A
-- Side B to the opposite Side B
-- Side C to the opposite Side C
+- Side A to the opposite Side A, or
+- Side B to the opposite Side B, or
+- Side C to the opposite Side C.
 
-The three connections may share tiles and may intersect.
+Work toward different side pairs may share tiles and may intersect.
 
 ## Board
 
@@ -47,13 +47,9 @@ The three connections may share tiles and may intersect.
 
 ## Winning
 
-The puzzle is solved when the active-tile network contains:
+The puzzle is solved as soon as the active-tile network contains a connected path between at least one pair of opposite sides.
 
-1. a connected path between one pair of opposite sides,
-2. a connected path between the second pair of opposite sides, and
-3. a connected path between the third pair of opposite sides.
-
-These three paths do **not** need to be separate. A single connected structure may satisfy two or all three requirements.
+All three pairs are checked independently. A path may connect more than one pair at once, especially when its endpoints are corner tiles, but only one connected pair is required to win.
 
 ## Scoring
 
@@ -66,4 +62,4 @@ These three paths do **not** need to be separate. A single connected structure m
 
 The puzzle should be easy to finish with enough words but difficult to solve optimally.
 
-The challenge is not simply to find words. It is to choose words whose paths create useful bridges, intersections, and shared routes so that all three pairs of opposite sides can be connected with as few words as possible.
+The challenge is not simply to find words. It is to choose which opposite-side pair offers the best route, then build that connection with as few words as possible.
