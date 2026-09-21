@@ -332,7 +332,7 @@ A reasonable shape for the browser implementation might resemble:
         game.test.ts
 
     data/
-        dictionary.txt
+        cleanedDictionary.txt
         puzzles.json
 ```
 

@@ -43,7 +43,7 @@ jobs:
       - name: Assemble static site
         run: |
           mkdir -p _site/build
-          cp index.html style.css dictionary.txt _site/
+          cp index.html style.css cleanedDictionary.txt _site/
           cp build/*.js _site/build/
           touch _site/.nojekyll
 

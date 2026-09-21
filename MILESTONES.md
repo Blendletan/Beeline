@@ -31,7 +31,7 @@ The repository currently contains:
 
 - `AGENTS.md`: development philosophy and project constraints;
 - `BeelineRules.md`: current game rules;
-- `dictionary.txt`: the authoritative word list;
+- `cleanedDictionary.txt`: the authoritative word list;
 - this roadmap;
 - `package.json`, `pnpm-lock.yaml`, and `tsconfig.json`: the minimal TypeScript toolchain;
 - `src/game.ts`: completed Milestones 1–3 game logic and exact solver;
@@ -69,7 +69,7 @@ Useful SpellSweep ideas and code shapes to adapt are:
 
 Do not copy SpellSweep wholesale. Its square-board geometry, full-board coverage objective, 25-bit solver, tutorial, sharing, cookies, dialogs, and late-stage presentation work are not automatically Beeline requirements.
 
-The Beeline and SpellSweep dictionary files contain the same 178,691 entries. Their byte-level difference is line endings only. Beeline's local `dictionary.txt` remains authoritative.
+Beeline now uses its local `cleanedDictionary.txt` as the authoritative word list. After normalization, it contains 64,342 words of at least two letters.
 
 ---
 
@@ -92,7 +92,7 @@ These decisions should be treated as current requirements unless the user explic
 - A tile cannot appear twice within one submitted path.
 - Tiles, including the wildcard, may be reused in later words.
 - The wildcard represents exactly one letter in a word and may represent a different letter in another word.
-- The submitted spelling must exist in `dictionary.txt`.
+- The submitted spelling must exist in `cleanedDictionary.txt`.
 - Following SpellSweep's established behavior, the same word may be submitted again, along the same or a different legal path. Every accepted submission counts as another word. This has no special bonus and will usually worsen the score.
 - An invalid submission must not change active tiles or the score.
 
@@ -153,7 +153,7 @@ This is a target, not a requirement to create empty files prematurely:
     AGENTS.md
     BeelineRules.md
     MILESTONES.md
-    dictionary.txt
+    cleanedDictionary.txt
     index.html
     style.css
     package.json
@@ -244,7 +244,7 @@ Use the same win predicate for normal play and solver masks so the solver cannot
 
 Adapt SpellSweep's proven approach:
 
-- normalize `dictionary.txt` to lowercase alphabetic words of length 2 or more;
+- normalize `cleanedDictionary.txt` to lowercase alphabetic words of length 2 or more;
 - store full words in a `Set<string>`;
 - store every useful prefix in a second set;
 - record the longest dictionary word;
@@ -345,7 +345,7 @@ Implementation result (September 18, 2026): complete. `src/game.ts` uses radius-
 
 ## Milestone 2: Dictionary, Paths, and Submission Rules
 
-- [x] Parse and normalize `dictionary.txt` with a two-letter minimum.
+- [x] Parse and normalize `cleanedDictionary.txt` with a two-letter minimum.
 - [x] Build full-word and prefix indexes.
 - [x] Validate adjacent, non-repeating tile paths.
 - [x] Match an ordinary path against its letters.
@@ -360,7 +360,7 @@ Implementation result (September 18, 2026): complete. `src/game.ts` uses radius-
 
 Completion criteria: legal word play and candidate enumeration work from pure functions, independent of the interface.
 
-Implementation result (September 18, 2026): complete. The parser reads all 178,691 authoritative entries and intentionally drops one-letter/nonalphabetic input. The enumerator performs prefix-pruned depth-first search, expands the center wildcard through `a`–`z`, and retains distinct paths for the same spelling. Accepted submissions use immutable state updates; repeated valid plays count again even when they add no active tile.
+Implementation result (updated September 20, 2026): complete. The parser reads all 64,342 normalized entries from the cleaned authoritative list and intentionally drops one-letter/nonalphabetic input. The enumerator performs prefix-pruned depth-first search, expands the center wildcard through `a`–`z`, and retains distinct paths for the same spelling. Accepted submissions use immutable state updates; repeated valid plays count again even when they add no active tile.
 
 ---
 

@@ -24,7 +24,7 @@ function benchmarkBoard(): string[] {
 const dictionaryStart = performance.now();
 const dictionary = createDictionaryIndex(
   parseDictionary(
-    readFileSync(new URL("../dictionary.txt", import.meta.url), "utf8"),
+    readFileSync(new URL("../cleanedDictionary.txt", import.meta.url), "utf8"),
   ),
 );
 const dictionaryMilliseconds = performance.now() - dictionaryStart;

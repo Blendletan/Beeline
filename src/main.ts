@@ -65,7 +65,7 @@ void loadGame();
 
 async function loadGame(): Promise<void> {
   try {
-    const response = await fetch("./dictionary.txt");
+    const response = await fetch("./cleanedDictionary.txt");
     if (!response.ok) {
       throw new Error(`Dictionary request failed with status ${response.status}.`);
     }
