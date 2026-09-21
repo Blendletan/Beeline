@@ -17,9 +17,14 @@
         <p class="eyebrow">Hex connection word puzzle</p>
         <h1>Beeline</h1>
       </div>
-      <button id="new-puzzle" class="secondary-button" type="button" disabled>
-        New puzzle
-      </button>
+      <div class="header-actions">
+        <button id="show-tutorial" class="secondary-button" type="button">
+          How to play
+        </button>
+        <button id="new-puzzle" class="secondary-button" type="button" disabled>
+          New puzzle
+        </button>
+      </div>
     </header>
 
     <p class="instructions">
@@ -80,16 +85,97 @@
         <ol id="played-words" class="played-words"></ol>
       </section>
 
-      <details id="solution-details" class="solution-panel">
-        <summary>Reveal the Perfect words</summary>
+      <div class="answer-actions">
+        <button id="reveal-answer" class="secondary-button" type="button" disabled>
+          Reveal answer
+        </button>
+        <button id="show-result" class="primary-button" type="button" hidden>
+          Share result
+        </button>
+      </div>
+
+      <section id="revealed-answer" class="solution-panel" hidden>
+        <h2>Perfect solution</h2>
         <p>
-          This shows one exact minimum-word solution. Select a word to trace its path;
-          revealing it does not change your score.
+          This is one exact minimum-word solution. Select a word to trace its path
+          on the board.
         </p>
         <ol id="solution-words"></ol>
-      </details>
+      </section>
     </section>
   </main>
+
+  <footer class="site-footer">
+    <a href="mailto:robertparkinson@shaw.ca">Send feedback</a>
+    <a
+      href="https://www.paypal.com/paypalme/AceBlender"
+      target="_blank"
+      rel="noopener noreferrer"
+    >Support more puzzles ☕</a>
+  </footer>
+
+  <dialog
+    id="tutorial-dialog"
+    class="app-dialog tutorial-dialog"
+    aria-labelledby="tutorial-title"
+    aria-describedby="tutorial-description"
+  >
+    <div class="dialog-header">
+      <div>
+        <p class="dialog-eyebrow">How to play Beeline</p>
+        <h2 id="tutorial-title"></h2>
+      </div>
+      <button id="close-tutorial" class="icon-button" type="button" aria-label="Close tutorial">
+        ×
+      </button>
+    </div>
+    <div id="tutorial-illustration" class="tutorial-illustration" aria-hidden="true"></div>
+    <p id="tutorial-description" class="dialog-description"></p>
+    <div class="tutorial-progress-row">
+      <span id="tutorial-step-count"></span>
+      <div id="tutorial-progress" class="tutorial-progress" aria-hidden="true"></div>
+    </div>
+    <div class="dialog-actions">
+      <button id="tutorial-back" class="secondary-button" type="button">Back</button>
+      <button id="tutorial-next" class="primary-button" type="button">Next</button>
+    </div>
+  </dialog>
+
+  <dialog
+    id="reveal-warning"
+    class="app-dialog reveal-warning"
+    aria-labelledby="reveal-warning-title"
+  >
+    <h2 id="reveal-warning-title">Reveal the answer?</h2>
+    <p class="dialog-description">
+      This will end this run and show a Perfect solution.
+    </p>
+    <div class="dialog-actions">
+      <button id="cancel-reveal" class="secondary-button" type="button">Keep playing</button>
+      <button id="confirm-reveal" class="primary-button" type="button">Reveal answer</button>
+    </div>
+  </dialog>
+
+  <dialog
+    id="result-dialog"
+    class="app-dialog result-dialog"
+    aria-labelledby="result-dialog-title"
+    aria-describedby="result-dialog-summary"
+  >
+    <button id="close-result-dialog" class="icon-button result-close" type="button" aria-label="Close result">
+      ×
+    </button>
+    <p class="dialog-eyebrow">Your result</p>
+    <h2 id="result-dialog-title">Beeline</h2>
+    <p id="result-dialog-summary" class="result-dialog-summary"></p>
+    <p class="result-invitation">Share your result without revealing the solution.</p>
+    <button id="copy-result" class="primary-button" type="button">Share result</button>
+    <p id="result-share-status" class="result-share-status" aria-live="polite"></p>
+    <div id="manual-share" class="manual-share" hidden>
+      <label for="manual-share-text">Copy your result manually</label>
+      <textarea id="manual-share-text" rows="5" readonly></textarea>
+    </div>
+  </dialog>
 
   <script type="module" src="./build/main.js"></script>
 </body>

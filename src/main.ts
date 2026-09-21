@@ -13,6 +13,53 @@ import {
 } from "./game.js";
 
 const DAILY_MODE = false;
+const SHARE_URL = "https://blendletan.github.io/Beeline/";
+const TUTORIAL_STORAGE_KEY = "beelineTutorialSeen";
+
+const TUTORIAL_STEPS = [
+  {
+    title: "Welcome to Beeline",
+    illustration: "B  E  E  L  I  N  E",
+    description:
+      "This quick tour explains the rules. Select Next to continue, or close it and start playing right away.",
+  },
+  {
+    title: "Make a word",
+    illustration: "B → E → E",
+    description:
+      "Select touching letter tiles in order to spell a valid word. A tile cannot be used twice in the same word.",
+  },
+  {
+    title: "Build a network",
+    illustration: "BEE + LINE",
+    description:
+      "Every accepted word permanently activates its tiles. Active tiles connect whenever they touch, even when different words activated them.",
+  },
+  {
+    title: "Connect opposite edges",
+    illustration: "EDGE  ⇢  EDGE",
+    description:
+      "Win by building one connected path from any board edge to the edge directly opposite it. You only need one crossing.",
+  },
+  {
+    title: "Use the wildcard",
+    illustration: "? = any letter",
+    description:
+      "The center ? can stand for one letter in a word. Enter that letter when you use it; the wildcard can change in later words.",
+  },
+  {
+    title: "Use fewer words",
+    illustration: "Words 3  ·  Perfect 2",
+    description:
+      "Your score is the number of accepted words. Perfect is the exact fewest words that can solve this board, so lower is better.",
+  },
+  {
+    title: "Ready to play",
+    illustration: "Find your beeline!",
+    description:
+      "Reuse active tiles when helpful and look for efficient crossings. Revealing the answer ends an unfinished run, and you can reopen this tutorial at any time.",
+  },
+] as const;
 
 const loadingElement = requiredElement<HTMLElement>("loading");
 const gameElement = requiredElement<HTMLElement>("game");
@@ -25,11 +72,45 @@ const wildcardInput = requiredElement<HTMLInputElement>("wildcard-letter");
 const clearButton = requiredElement<HTMLButtonElement>("clear-path");
 const submitButton = requiredElement<HTMLButtonElement>("submit-word");
 const newPuzzleButton = requiredElement<HTMLButtonElement>("new-puzzle");
+const showTutorialButton = requiredElement<HTMLButtonElement>("show-tutorial");
 const messageElement = requiredElement<HTMLParagraphElement>("message");
 const noWordsElement = requiredElement<HTMLParagraphElement>("no-words");
 const playedWordsElement = requiredElement<HTMLOListElement>("played-words");
-const solutionDetails = requiredElement<HTMLDetailsElement>("solution-details");
+const revealAnswerButton = requiredElement<HTMLButtonElement>("reveal-answer");
+const showResultButton = requiredElement<HTMLButtonElement>("show-result");
+const revealedAnswerElement = requiredElement<HTMLElement>("revealed-answer");
 const solutionWordsElement = requiredElement<HTMLOListElement>("solution-words");
+const tutorialDialog = requiredElement<HTMLDialogElement>("tutorial-dialog");
+const closeTutorialButton = requiredElement<HTMLButtonElement>("close-tutorial");
+const tutorialTitleElement = requiredElement<HTMLHeadingElement>("tutorial-title");
+const tutorialIllustrationElement = requiredElement<HTMLDivElement>(
+  "tutorial-illustration",
+);
+const tutorialDescriptionElement = requiredElement<HTMLParagraphElement>(
+  "tutorial-description",
+);
+const tutorialStepCountElement = requiredElement<HTMLElement>("tutorial-step-count");
+const tutorialProgressElement = requiredElement<HTMLDivElement>("tutorial-progress");
+const tutorialBackButton = requiredElement<HTMLButtonElement>("tutorial-back");
+const tutorialNextButton = requiredElement<HTMLButtonElement>("tutorial-next");
+const revealWarningDialog = requiredElement<HTMLDialogElement>("reveal-warning");
+const cancelRevealButton = requiredElement<HTMLButtonElement>("cancel-reveal");
+const confirmRevealButton = requiredElement<HTMLButtonElement>("confirm-reveal");
+const resultDialog = requiredElement<HTMLDialogElement>("result-dialog");
+const closeResultDialogButton = requiredElement<HTMLButtonElement>(
+  "close-result-dialog",
+);
+const resultDialogSummaryElement = requiredElement<HTMLParagraphElement>(
+  "result-dialog-summary",
+);
+const copyResultButton = requiredElement<HTMLButtonElement>("copy-result");
+const resultShareStatusElement = requiredElement<HTMLParagraphElement>(
+  "result-share-status",
+);
+const manualShareElement = requiredElement<HTMLDivElement>("manual-share");
+const manualShareTextElement = requiredElement<HTMLTextAreaElement>(
+  "manual-share-text",
+);
 
 let dictionary: DictionaryIndex;
 let puzzle: GeneratedPuzzle;
@@ -37,10 +118,34 @@ let game: GameState;
 let selectedPath: number[] = [];
 let revealedPath: readonly number[] = [];
 let playedWords: string[] = [];
+let answerRevealed = false;
+let gaveUp = false;
+let tutorialStepIndex = 0;
 
 clearButton.addEventListener("click", clearSelection);
 submitButton.addEventListener("click", submitSelection);
 newPuzzleButton.addEventListener("click", () => void startPuzzle());
+showTutorialButton.addEventListener("click", openTutorial);
+closeTutorialButton.addEventListener("click", () => tutorialDialog.close());
+tutorialBackButton.addEventListener("click", () => {
+  tutorialStepIndex = Math.max(0, tutorialStepIndex - 1);
+  renderTutorial();
+});
+tutorialNextButton.addEventListener("click", () => {
+  if (tutorialStepIndex === TUTORIAL_STEPS.length - 1) {
+    tutorialDialog.close();
+    return;
+  }
+  tutorialStepIndex += 1;
+  renderTutorial();
+});
+tutorialDialog.addEventListener("close", rememberTutorialSeen);
+revealAnswerButton.addEventListener("click", requestRevealAnswer);
+showResultButton.addEventListener("click", openResultDialog);
+cancelRevealButton.addEventListener("click", () => revealWarningDialog.close());
+confirmRevealButton.addEventListener("click", revealAnswer);
+closeResultDialogButton.addEventListener("click", () => resultDialog.close());
+copyResultButton.addEventListener("click", () => void copyShareResult());
 wildcardInput.addEventListener("input", () => {
   wildcardInput.value = wildcardInput.value.replace(/[^a-z]/gi, "").slice(0, 1);
   renderSelection();
@@ -50,6 +155,9 @@ document.addEventListener("keydown", (event) => {
     event.key === "Enter" &&
     !event.repeat &&
     !submitButton.disabled &&
+    !tutorialDialog.open &&
+    !revealWarningDialog.open &&
+    !resultDialog.open &&
     event.target !== newPuzzleButton
   ) {
     submitSelection();
@@ -67,6 +175,9 @@ async function loadGame(): Promise<void> {
 
     dictionary = createDictionaryIndex(parseDictionary(await response.text()));
     await startPuzzle();
+    if (!hasSeenTutorial()) {
+      openTutorial();
+    }
   } catch (error) {
     console.error(error);
     loadingElement.textContent =
@@ -76,7 +187,14 @@ async function loadGame(): Promise<void> {
 }
 
 async function startPuzzle(): Promise<void> {
+  if (resultDialog.open) {
+    resultDialog.close();
+  }
+  if (revealWarningDialog.open) {
+    revealWarningDialog.close();
+  }
   newPuzzleButton.disabled = true;
+  revealAnswerButton.disabled = true;
   gameElement.hidden = true;
   loadingElement.hidden = false;
   loadingElement.textContent = DAILY_MODE
@@ -92,13 +210,15 @@ async function startPuzzle(): Promise<void> {
   selectedPath = [];
   revealedPath = [];
   playedWords = [];
+  answerRevealed = false;
+  gaveUp = false;
   wildcardInput.value = "";
-  solutionDetails.open = false;
 
   loadingElement.hidden = true;
   gameElement.hidden = false;
   newPuzzleButton.textContent = DAILY_MODE ? "Restart puzzle" : "New puzzle";
   newPuzzleButton.disabled = false;
+  revealAnswerButton.disabled = false;
   renderSolution();
   render();
   showMessage(
@@ -108,7 +228,7 @@ async function startPuzzle(): Promise<void> {
 }
 
 function chooseTile(tileIndex: number): void {
-  if (game.completed) {
+  if (runEnded()) {
     return;
   }
 
@@ -174,6 +294,7 @@ function submitSelection(): void {
       `Opposite sides connected in ${game.wordsUsed} words. ${comparison}`,
       "success",
     );
+    openResultDialog();
   } else {
     showMessage(`${word.toUpperCase()} accepted.`, "success");
   }
@@ -213,7 +334,7 @@ function render(): void {
         selectedPosition === -1 && revealedPosition !== -1,
       );
       button.classList.toggle("wildcard", tile === WILDCARD);
-      button.disabled = game.completed;
+      button.disabled = runEnded();
       button.setAttribute("aria-pressed", String(selectedPosition !== -1));
       button.setAttribute(
         "aria-label",
@@ -240,6 +361,9 @@ function render(): void {
 
   scoreElement.textContent = String(game.wordsUsed);
   perfectElement.textContent = String(puzzle.perfect);
+  revealAnswerButton.disabled = answerRevealed;
+  showResultButton.hidden = !runEnded();
+  revealedAnswerElement.hidden = !answerRevealed;
 
   noWordsElement.hidden = playedWords.length > 0;
   playedWordsElement.replaceChildren(
@@ -253,6 +377,14 @@ function render(): void {
 }
 
 function renderSelection(): void {
+  if (gaveUp) {
+    currentWordElement.textContent = "Answer revealed";
+    wildcardControl.hidden = true;
+    clearButton.disabled = true;
+    submitButton.disabled = true;
+    return;
+  }
+
   if (game.completed) {
     currentWordElement.textContent = "Puzzle complete";
     wildcardControl.hidden = true;
@@ -308,6 +440,137 @@ function renderSolution(): void {
       return item;
     }),
   );
+}
+
+function requestRevealAnswer(): void {
+  if (answerRevealed) {
+    return;
+  }
+  if (game.completed) {
+    revealAnswer();
+    return;
+  }
+  revealWarningDialog.showModal();
+}
+
+function revealAnswer(): void {
+  if (answerRevealed) {
+    return;
+  }
+  if (revealWarningDialog.open) {
+    revealWarningDialog.close();
+  }
+
+  gaveUp = !game.completed;
+  answerRevealed = true;
+  selectedPath = [];
+  wildcardInput.value = "";
+  revealedPath = puzzle.solution[0]?.path ?? [];
+  render();
+  showMessage(
+    gaveUp
+      ? "Answer revealed. This run has ended."
+      : "Perfect answer revealed. Your result is unchanged.",
+    "neutral",
+  );
+  openResultDialog();
+}
+
+function runEnded(): boolean {
+  return game.completed || gaveUp;
+}
+
+function resultSummary(): string {
+  const perfectLabel = `${puzzle.perfect} ${puzzle.perfect === 1 ? "word" : "words"}`;
+  if (gaveUp) {
+    return `Answer revealed · Perfect was ${perfectLabel}`;
+  }
+
+  const scoreLabel = `${game.wordsUsed} ${game.wordsUsed === 1 ? "word" : "words"}`;
+  if (game.wordsUsed === puzzle.perfect) {
+    return `${scoreLabel} · Perfect score!`;
+  }
+  return `${scoreLabel} · +${game.wordsUsed - puzzle.perfect} over Perfect`;
+}
+
+function openResultDialog(): void {
+  if (!runEnded()) {
+    return;
+  }
+  resultDialogSummaryElement.textContent = resultSummary();
+  resultShareStatusElement.textContent = "";
+  manualShareElement.hidden = true;
+  manualShareTextElement.value = "";
+  if (!resultDialog.open) {
+    resultDialog.showModal();
+  }
+  copyResultButton.focus();
+}
+
+function shareText(): string {
+  if (gaveUp) {
+    return `Beeline\n${resultSummary()}\n${SHARE_URL}`;
+  }
+
+  const perfectCells = "🟨".repeat(Math.min(game.wordsUsed, puzzle.perfect));
+  const extraCells = "🟦".repeat(Math.max(0, game.wordsUsed - puzzle.perfect));
+  return `Beeline\n${resultSummary()}\n${perfectCells}${extraCells}\n${SHARE_URL}`;
+}
+
+async function copyShareResult(): Promise<void> {
+  const text = shareText();
+  try {
+    await navigator.clipboard.writeText(text);
+    resultShareStatusElement.textContent = "Copied! Paste it anywhere.";
+    manualShareElement.hidden = true;
+  } catch {
+    resultShareStatusElement.textContent = "Copy the text below to share your result.";
+    manualShareTextElement.value = text;
+    manualShareElement.hidden = false;
+    manualShareTextElement.focus();
+    manualShareTextElement.select();
+  }
+}
+
+function openTutorial(): void {
+  tutorialStepIndex = 0;
+  renderTutorial();
+  tutorialDialog.showModal();
+}
+
+function renderTutorial(): void {
+  const step = TUTORIAL_STEPS[tutorialStepIndex];
+  tutorialTitleElement.textContent = step.title;
+  tutorialIllustrationElement.textContent = step.illustration;
+  tutorialDescriptionElement.textContent = step.description;
+  tutorialStepCountElement.textContent = `Step ${tutorialStepIndex + 1} of ${TUTORIAL_STEPS.length}`;
+  tutorialProgressElement.replaceChildren(
+    ...TUTORIAL_STEPS.map((_, index) => {
+      const dot = document.createElement("span");
+      dot.className = "tutorial-dot";
+      dot.classList.toggle("current", index === tutorialStepIndex);
+      return dot;
+    }),
+  );
+  tutorialBackButton.disabled = tutorialStepIndex === 0;
+  tutorialNextButton.textContent =
+    tutorialStepIndex === TUTORIAL_STEPS.length - 1 ? "Start playing" : "Next";
+}
+
+function hasSeenTutorial(): boolean {
+  try {
+    return localStorage.getItem(TUTORIAL_STORAGE_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function rememberTutorialSeen(): void {
+  try {
+    localStorage.setItem(TUTORIAL_STORAGE_KEY, "1");
+  } catch {
+    // The tutorial remains available even when storage is blocked.
+  }
 }
 
 function showMessage(

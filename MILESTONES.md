@@ -140,7 +140,7 @@ The first interface only needs to make the game understandable and playable:
 - clear invalid-word and completion feedback;
 - a simple restart/new-puzzle action in development mode.
 
-Tutorials, result sharing, cookies, elaborate dialogs, animation, branding, and final visual polish are later decisions, not initial requirements.
+Tutorials, result sharing, persistence, animation, branding, and final visual polish were not initial requirements. A first-visit tutorial, answer reveal, result sharing, and a small footer were added later after explicit playtesting direction.
 
 ---
 
@@ -462,6 +462,9 @@ The browser verification replayed the displayed three-word optimal solution thro
 - [x] Record this experimental rule change explicitly in `BeelineRules.md` and this roadmap.
 - [x] Prefer changing or deleting code over preserving an abstraction made obsolete by playtesting.
 - [x] Add an experimental branch where connecting any one opposite-side pair wins, with matching gameplay, solver, generation, documentation, and interface behavior.
+- [x] Add a short first-visit tutorial that can always be reopened.
+- [x] End an unfinished run when its Perfect answer is revealed.
+- [x] Show a share invitation after either completion or answer reveal.
 
 Completion criteria: there is concrete playtest evidence about whether Beeline is fun and which rules or generation choices need adjustment.
 
@@ -488,16 +491,20 @@ Completion criteria: either the measured game already performs acceptably and no
 
 - [ ] Improve typography, spacing, and board readability without adding unnecessary edge labels.
 - [ ] Refine active-network and completion feedback.
-- [ ] Support narrow mobile screens and common desktop sizes.
+- [x] Support narrow mobile screens and common desktop sizes.
 - [ ] Verify keyboard operation, focus visibility, screen-reader labels, and reduced-motion behavior if motion is added.
 - [ ] Add only those transitions or animations that make state changes easier to understand.
-- [ ] Decide whether tutorial, answer reveal, persistence, and result sharing are worthwhile based on playtesting.
+- [x] Add an accessible tutorial dialog, reveal confirmation, result/share dialog, and manual-copy fallback.
+- [x] Add a compact feedback/support footer.
+- [ ] Decide whether puzzle persistence is worthwhile based on playtesting.
 - [x] Keep all asset and module paths compatible with a GitHub Pages project subdirectory.
 - [x] Add the smallest understandable GitHub Pages deployment workflow.
 - [ ] Set the intended release value of `DAILY_MODE` with a one-line change.
 - [x] Build and test the deployed static site.
 
 Completion criteria: the stable game is attractive, accessible, and deployed as a static site without a backend or unnecessary application framework.
+
+Interface update (September 20, 2026): Beeline now opens a seven-step tutorial on the first visit and keeps a How to play button available afterward. Revealing an unfinished answer requires confirmation and ends that run; both completion and reveal open a result dialog that offers spoiler-free share text, clipboard copying, and a manual-copy fallback. A persistent Share result button reopens the dialog after it is closed. The page also has a compact feedback/support footer. Browser verification covered tutorial navigation, reveal and share behavior, an ordinary two-word Perfect completion, result reopening, and a 347-pixel-wide viewport with no horizontal overflow.
 
 Deployment progress (September 18, 2026): the small GitHub Actions workflow runs the 19 tests, compiles TypeScript, assembles only the static browser assets, and deploys them through GitHub Pages. The first successful run completed in 46 seconds. The public `/Beeline/` URL loaded the dictionary and compiled modules correctly, generated a verified Perfect-4 board, accepted tile interaction, and reported no browser console warnings or errors. Deployment is complete, while Milestone 8 remains open because visual polish and the final `DAILY_MODE` decision intentionally follow playtesting.
 

@@ -51,6 +51,7 @@ Any connection between opposite edges wins. A path may connect more than one pai
 - Lower scores are better.
 - The ideal score is the minimum number of words in which the board can be solved.
 - There is no penalty for reusing tiles across different words.
+- Revealing the answer before solving ends the run without a completed score. Revealing it after solving does not change the result.
 
 ## Design Principle
 
