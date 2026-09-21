@@ -30,11 +30,6 @@ const noWordsElement = requiredElement<HTMLParagraphElement>("no-words");
 const playedWordsElement = requiredElement<HTMLOListElement>("played-words");
 const solutionDetails = requiredElement<HTMLDetailsElement>("solution-details");
 const solutionWordsElement = requiredElement<HTMLOListElement>("solution-words");
-const connectionElements = [
-  requiredElement<HTMLElement>("connection-a"),
-  requiredElement<HTMLElement>("connection-b"),
-  requiredElement<HTMLElement>("connection-c"),
-] as const;
 
 let dictionary: DictionaryIndex;
 let puzzle: GeneratedPuzzle;
@@ -245,14 +240,6 @@ function render(): void {
 
   scoreElement.textContent = String(game.wordsUsed);
   perfectElement.textContent = String(puzzle.perfect);
-  connectionElements.forEach((element, index) => {
-    const connected = game.connections[index];
-    element.classList.toggle("connected", connected);
-    const status = element.querySelector("strong");
-    if (status) {
-      status.textContent = connected ? "Connected" : "Open";
-    }
-  });
 
   noWordsElement.hidden = playedWords.length > 0;
   playedWordsElement.replaceChildren(

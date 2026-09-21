@@ -4,13 +4,7 @@
 
 The board is a regular hexagon with **5 tiles on each side** (61 tiles total).
 
-The six edges form **three pairs of opposite sides**. The goal is to use valid words to create a connected path joining **any one pair of opposite sides**, while using as few words as possible.
-
-In other words, the player may win by connecting:
-
-- Side A to the opposite Side A, or
-- Side B to the opposite Side B, or
-- Side C to the opposite Side C.
+The six edges form **three possible pairs of opposite sides**. The goal is to use valid words to create a connected path from any edge to the edge directly opposite it, while using as few words as possible.
 
 Work toward different side pairs may share tiles and may intersect.
 
@@ -49,7 +43,7 @@ Work toward different side pairs may share tiles and may intersect.
 
 The puzzle is solved as soon as the active-tile network contains a connected path between at least one pair of opposite sides.
 
-All three pairs are checked independently. A path may connect more than one pair at once, especially when its endpoints are corner tiles, but only one connected pair is required to win.
+Any connection between opposite edges wins. A path may connect more than one pair at once, especially when its endpoints are corner tiles, but only one is required.
 
 ## Scoring
 

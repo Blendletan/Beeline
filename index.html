@@ -24,7 +24,7 @@
 
     <p class="instructions">
       Make words from touching letters. Every accepted word activates its tiles.
-      Connect any matching pair of board edges using as few words as possible.
+      Connect any two opposite board edges using as few words as possible.
     </p>
 
     <section id="loading" class="loading-panel" aria-live="polite">
@@ -43,31 +43,7 @@
         </div>
       </div>
 
-      <div class="connection-row" aria-label="Opposite edge connections; any one completes the puzzle">
-        <div id="connection-a" class="connection-card pair-a">
-          <span class="pair-dot" aria-hidden="true"></span>
-          <span>Pair A</span>
-          <strong>Open</strong>
-        </div>
-        <div id="connection-b" class="connection-card pair-b">
-          <span class="pair-dot" aria-hidden="true"></span>
-          <span>Pair B</span>
-          <strong>Open</strong>
-        </div>
-        <div id="connection-c" class="connection-card pair-c">
-          <span class="pair-dot" aria-hidden="true"></span>
-          <span>Pair C</span>
-          <strong>Open</strong>
-        </div>
-      </div>
-
       <div class="board-wrap">
-        <div class="edge-label edge-a edge-a-left" aria-hidden="true">A</div>
-        <div class="edge-label edge-a edge-a-right" aria-hidden="true">A</div>
-        <div class="edge-label edge-b edge-b-top" aria-hidden="true">B</div>
-        <div class="edge-label edge-b edge-b-bottom" aria-hidden="true">B</div>
-        <div class="edge-label edge-c edge-c-top" aria-hidden="true">C</div>
-        <div class="edge-label edge-c edge-c-bottom" aria-hidden="true">C</div>
         <div id="board" class="board" role="group" aria-label="Beeline letter board"></div>
       </div>
 

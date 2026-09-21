@@ -11,13 +11,10 @@ export type HexCoordinate = Readonly<{
 
 export type Board = readonly string[];
 
-export type ConnectionStatus = readonly [boolean, boolean, boolean];
-
 export type GameState = Readonly<{
   board: Board;
   active: readonly boolean[];
   wordsUsed: number;
-  connections: ConnectionStatus;
   completed: boolean;
 }>;
 
@@ -63,7 +60,6 @@ type WordCandidate = Readonly<{
   key: string;
   size: number;
   sideTouches: number;
-  completedConnections: number;
 }>;
 
 const ALPHABET = "abcdefghijklmnopqrstuvwxyz";
@@ -127,7 +123,7 @@ export const SIDE_TILE_INDEXES: readonly (readonly number[])[] = [
   sideIndexes((coordinate) => coordinate.s === BOARD_RADIUS),
 ];
 
-export const OPPOSITE_SIDE_PAIRS: readonly (readonly [number, number])[] = [
+const OPPOSITE_SIDE_PAIRS: readonly (readonly [number, number])[] = [
   [0, 1],
   [2, 3],
   [4, 5],
@@ -202,7 +198,6 @@ export function createGame(board: Board): GameState {
     board: [...board],
     active: Array(TILE_COUNT).fill(false),
     wordsUsed: 0,
-    connections: [false, false, false],
     completed: false,
   };
 }
@@ -295,15 +290,13 @@ export function submitWord(
     active[tileIndex] = true;
   }
 
-  const connections = connectionStatus(active);
   return {
     accepted: true,
     state: {
       ...state,
       active,
       wordsUsed: state.wordsUsed + 1,
-      connections,
-      completed: connections.some(Boolean),
+      completed: isWinningMask(activeMask(active)),
     },
   };
 }
@@ -322,22 +315,10 @@ export function activeMask(active: readonly boolean[]): bigint {
   return mask;
 }
 
-export function connectionStatus(
-  active: readonly boolean[],
-): ConnectionStatus {
-  return connectionStatusForMask(activeMask(active));
-}
-
-export function connectionStatusForMask(mask: bigint): ConnectionStatus {
-  return [
-    sidesAreConnected(mask, 0, 1),
-    sidesAreConnected(mask, 2, 3),
-    sidesAreConnected(mask, 4, 5),
-  ];
-}
-
 export function isWinningMask(mask: bigint): boolean {
-  return connectionStatusForMask(mask).some(Boolean);
+  return OPPOSITE_SIDE_PAIRS.some(([firstSide, secondSide]) =>
+    sidesAreConnected(mask, firstSide, secondSide),
+  );
 }
 
 export function visitValidWordPaths(
@@ -695,7 +676,6 @@ function reduceCandidates(wordPaths: readonly WordPath[]): WordCandidate[] {
       key,
       size: bitCount(mask),
       sideTouches: SIDE_MASKS.filter((sideMask) => (mask & sideMask) !== 0n).length,
-      completedConnections: connectionStatusForMask(mask).filter(Boolean).length,
     };
     const existing = candidateByMask.get(mask);
     if (!existing || key < existing.key) {
@@ -719,7 +699,6 @@ function reduceCandidates(wordPaths: readonly WordPath[]): WordCandidate[] {
   }
 
   return nondominated.sort((first, second) =>
-    second.completedConnections - first.completedConnections ||
     second.sideTouches - first.sideTouches ||
     second.size - first.size ||
     first.key.localeCompare(second.key),

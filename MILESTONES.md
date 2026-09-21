@@ -136,7 +136,7 @@ The first interface only needs to make the game understandable and playable:
 - clear and submit controls;
 - visible active tiles;
 - current word-count score and Perfect score;
-- status for the three opposite-side connections;
+- clear instruction that connecting any two opposite edges wins;
 - clear invalid-word and completion feedback;
 - a simple restart/new-puzzle action in development mode.
 
@@ -437,17 +437,17 @@ The target in-app browser generated three fresh one-attempt Perfect-3 boards in 
 - [x] Show one-letter wildcard input only when the selected path uses the center.
 - [x] Provide clear-selection and submit controls.
 - [x] Distinguish inactive, active, selected, center-wildcard, and revealed-solution states.
-- [x] Show accepted words used, Perfect, and the status of all three side pairs.
+- [x] Show accepted words used and Perfect without separate pair-status indicators.
 - [x] Announce invalid words, accepted words, and completion clearly.
 - [x] Provide a simple way to start a fresh development puzzle.
 - [x] Optionally expose the known optimal paths for developer verification; a polished Reveal Answer flow is not required yet.
 - [x] Verify the playable loop with mouse and touch-sized controls in a browser.
 
-Completion criteria: a person can load a verified puzzle, form and submit words, see the network grow, understand the three possible connection goals, finish the puzzle, and compare the result with Perfect without using developer tools.
+Completion criteria: a person can load a verified puzzle, form and submit words, see the network grow, understand that any opposite-edge connection wins, finish the puzzle, and compare the result with Perfect without using developer tools.
 
-Implementation result (September 18, 2026): complete. The interface is one HTML file, one CSS file, and one direct-DOM TypeScript entry point. It shows the exact Perfect score, three independently updating edge-pair indicators, active and selected cells, numbered path order, conditional wildcard input, accepted words, and explicit error/success messages. The collapsed Perfect-solution panel lists the solver's words and lets a tester trace any solution path without changing the score.
+Implementation result (updated September 20, 2026): complete. The interface is one HTML file, one CSS file, and one direct-DOM TypeScript entry point. It shows the exact Perfect score, active and selected cells, numbered path order, conditional wildcard input, accepted words, and explicit error/success messages. Pair-status cards and A/B/C edge labels were removed after the any-opposite-edge rule was retained. The collapsed Perfect-solution panel lists the solver's words and lets a tester trace any solution path without changing the score.
 
-The browser verification replayed the displayed three-word optimal solution through the ordinary tile, wildcard, and submit controls. The board reached 3 words / Perfect 3, all three pair cards changed to Connected, and the completion message reported a Perfect score. Separate interaction checks confirmed nonadjacent-click rejection and removal by clicking the path's final tile. A fresh-puzzle action reset the score and produced a different verified board. Desktop and 390-by-844 viewport checks were readable, and the browser console reported no warnings or errors.
+The browser verification replayed the displayed three-word optimal solution through the ordinary tile, wildcard, and submit controls. The board reached 3 words / Perfect 3 and the completion message reported a Perfect score. Separate interaction checks confirmed nonadjacent-click rejection and removal by clicking the path's final tile. A fresh-puzzle action reset the score and produced a different verified board. Desktop and 390-by-844 viewport checks were readable, and the browser console reported no warnings or errors.
 
 ---
 
@@ -457,10 +457,10 @@ The browser verification replayed the displayed three-word optimal solution thro
 - [ ] Record whether boards are too easy, too difficult, repetitive, or dominated by obscure dictionary words.
 - [ ] Compare human scores with Perfect and assess whether Perfect feels plausible and useful.
 - [ ] Observe whether two-letter words create interesting rescue plays or merely noise.
-- [ ] Observe whether side/corner indicators make the three possible objectives and the any-one win condition understandable.
+- [ ] Observe whether the instructions make the any-opposite-edge win condition understandable without labels.
 - [ ] Observe whether click-based path entry is comfortable on desktop and mobile.
 - [x] Record this experimental rule change explicitly in `BeelineRules.md` and this roadmap.
-- [ ] Prefer changing or deleting code over preserving an abstraction made obsolete by playtesting.
+- [x] Prefer changing or deleting code over preserving an abstraction made obsolete by playtesting.
 - [x] Add an experimental branch where connecting any one opposite-side pair wins, with matching gameplay, solver, generation, documentation, and interface behavior.
 
 Completion criteria: there is concrete playtest evidence about whether Beeline is fun and which rules or generation choices need adjustment.
@@ -486,7 +486,7 @@ Completion criteria: either the measured game already performs acceptably and no
 
 ## Milestone 8: Visual Design, Accessibility, and Static Deployment
 
-- [ ] Improve typography, spacing, board readability, and side-pair labeling.
+- [ ] Improve typography, spacing, and board readability without adding unnecessary edge labels.
 - [ ] Refine active-network and completion feedback.
 - [ ] Support narrow mobile screens and common desktop sizes.
 - [ ] Verify keyboard operation, focus visibility, screen-reader labels, and reduced-motion behavior if motion is added.
@@ -531,4 +531,4 @@ Then open <http://127.0.0.1:4173/>. `DAILY_MODE` is intentionally `false`, so Ne
 
 The same development-mode build is publicly playable at <https://blendletan.github.io/Beeline/>. Every push to `main` runs the tests and compiler before GitHub Pages deployment.
 
-Record concrete observations about puzzle difficulty, obscure dictionary words, the usefulness of two-letter words, clarity of the three edge-pair goals, and comfort of path entry before changing rules or polishing the presentation. Do not begin tutorials, sharing, persistence, elaborate animation, branding, deployment, or performance architecture until playtesting supplies a reason.
+Record concrete observations about puzzle difficulty, obscure dictionary words, the usefulness of two-letter words, clarity of the any-opposite-edge goal, and comfort of path entry before changing rules or polishing the presentation. Do not begin tutorials, sharing, persistence, elaborate animation, branding, deployment, or performance architecture until playtesting supplies a reason.

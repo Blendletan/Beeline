@@ -9,9 +9,9 @@ import {
   SIDE_TILE_INDEXES,
   TILE_COUNT,
   WILDCARD_INDEX,
+  activeMask,
   areAdjacent,
   assertValidBoard,
-  connectionStatus,
   createDictionaryIndex,
   createGame,
   enumerateWordPaths,
@@ -19,6 +19,7 @@ import {
   generateCandidateBoard,
   generateVerifiedPuzzle,
   isSolvableBoard,
+  isWinningMask,
   isValidPath,
   isValidWord,
   localDateKey,
@@ -223,13 +224,13 @@ test("invalid submissions have no effect and repeated valid words still count", 
   assert.deepEqual(repeated.state.active, first.state.active);
 });
 
-test("a diameter connects two side pairs because its endpoints are corners", () => {
+test("a corner-to-corner diameter connects opposite sides", () => {
   const active = Array(TILE_COUNT).fill(false) as boolean[];
   for (const index of qDiameter()) {
     active[index] = true;
   }
 
-  assert.deepEqual(connectionStatus(active), [true, false, true]);
+  assert.equal(isWinningMask(activeMask(active)), true);
 });
 
 test("accepted words combine and complete after any opposite-side pair connects", () => {
@@ -248,10 +249,8 @@ test("accepted words combine and complete after any opposite-side pair connects"
   const second = submitWord(first.state, secondPath, "bbbbb", dictionary);
 
   assert.equal(first.accepted, true);
-  assert.deepEqual(first.state.connections, [false, false, false]);
   assert.equal(first.state.completed, false);
   assert.equal(second.accepted, true);
-  assert.deepEqual(second.state.connections, [true, false, true]);
   assert.equal(second.state.completed, true);
   assert.equal(second.state.wordsUsed, 2);
 
@@ -332,17 +331,10 @@ test("minimum search deterministically chooses one winning pair and ignores a de
 
   const forward = minimumConnectionSolution([decoy, second, first]);
   const reverse = minimumConnectionSolution([first, second, decoy]);
-  const winningTiles = new Set(first.path);
 
   assert.deepEqual(forward.solution, [first]);
   assert.deepEqual(reverse.solution, forward.solution);
   assert.equal(forward.solution?.includes(decoy), false);
-  assert.deepEqual(
-    connectionStatus(
-      Array.from({ length: TILE_COUNT }, (_, index) => winningTiles.has(index)),
-    ),
-    [true, false, true],
-  );
 });
 
 test("candidate boards use weighted letters and always center the wildcard", () => {

@@ -9,11 +9,7 @@
   --border: #c8ccc3;
   --inactive: #e5e4da;
   --active: #9fd2bf;
-  --active-border: #2d725b;
   --selected: #ffd86f;
-  --pair-a: #c15442;
-  --pair-b: #2c6aa0;
-  --pair-c: #6e5792;
 }
 
 * {
@@ -89,18 +85,13 @@ h1 {
   padding: 1rem;
 }
 
-.score-row,
-.connection-row {
+.score-row {
   display: grid;
   gap: 0.65rem;
-}
-
-.score-row {
   grid-template-columns: repeat(2, 1fr);
 }
 
-.score-card,
-.connection-card {
+.score-card {
   border: 1px solid var(--border);
   border-radius: 0.7rem;
   background: var(--paper);
@@ -117,60 +108,6 @@ h1 {
 .score-card strong {
   color: #17231f;
   font-size: 1.4rem;
-}
-
-.connection-row {
-  grid-template-columns: repeat(3, 1fr);
-  margin-top: 0.65rem;
-}
-
-.connection-card {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: center;
-  gap: 0.1rem 0.45rem;
-  padding: 0.55rem 0.65rem;
-  color: var(--ink-soft);
-  font-size: 0.8rem;
-}
-
-.connection-card strong {
-  grid-column: 2;
-  color: #6d756f;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-}
-
-.connection-card.connected {
-  border-color: var(--active-border);
-  background: #e8f4ed;
-}
-
-.connection-card.connected strong {
-  color: #226047;
-}
-
-.pair-dot {
-  grid-row: span 2;
-  width: 0.75rem;
-  height: 0.75rem;
-  border-radius: 50%;
-  background: currentColor;
-}
-
-.pair-a .pair-dot,
-.edge-a {
-  color: var(--pair-a);
-}
-
-.pair-b .pair-dot,
-.edge-b {
-  color: var(--pair-b);
-}
-
-.pair-c .pair-dot,
-.edge-c {
-  color: var(--pair-c);
 }
 
 .board-wrap {
@@ -254,28 +191,6 @@ h1 {
   line-height: 1.05rem;
   text-align: center;
 }
-
-.edge-label {
-  position: absolute;
-  z-index: 5;
-  display: grid;
-  width: 1.6rem;
-  height: 1.6rem;
-  place-items: center;
-  transform: translate(-50%, -50%);
-  border: 2px solid currentColor;
-  border-radius: 50%;
-  background: var(--paper);
-  font-size: 0.75rem;
-  font-weight: 900;
-}
-
-.edge-a-left { left: 7%; top: 50%; }
-.edge-a-right { left: 93%; top: 50%; }
-.edge-b-top { left: 74%; top: 6%; }
-.edge-b-bottom { left: 26%; top: 94%; }
-.edge-c-top { left: 26%; top: 6%; }
-.edge-c-bottom { left: 74%; top: 94%; }
 
 .word-panel,
 .played-panel,
@@ -428,21 +343,6 @@ h1 {
 
   .game-header {
     align-items: flex-end;
-  }
-
-  .connection-card {
-    grid-template-columns: 1fr;
-    justify-items: center;
-    padding: 0.45rem 0.2rem;
-    text-align: center;
-  }
-
-  .connection-card .pair-dot {
-    grid-row: auto;
-  }
-
-  .connection-card strong {
-    grid-column: auto;
   }
 
   .board-wrap {
