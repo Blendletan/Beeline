@@ -336,15 +336,20 @@ h1 {
   display: flex;
   width: min(100% - 2rem, 720px);
   margin: 0 auto;
-  padding: 0 0 2rem;
+  padding: 0.75rem 0 2.5rem;
   justify-content: center;
-  gap: 0.75rem 1.5rem;
+  gap: 1rem 2rem;
   flex-wrap: wrap;
   color: var(--ink-soft);
-  font-size: 0.85rem;
+  font-size: 1.1rem;
+  font-weight: 600;
 }
 
 .site-footer a {
+  display: inline-flex;
+  min-height: 2.75rem;
+  padding: 0.55rem 0.8rem;
+  align-items: center;
   color: inherit;
 }
 
@@ -671,6 +676,10 @@ h1 {
   .page-shell {
     width: min(100% - 1rem, 720px);
     padding-top: 0.8rem;
+  }
+
+  .site-footer {
+    width: min(100% - 1rem, 720px);
   }
 
   .game-header {

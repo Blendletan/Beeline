@@ -44,7 +44,7 @@ The repository currently contains:
 
 The project is a Git repository backed up at <https://github.com/Blendletan/Beeline> on the `main` branch and deployed at <https://blendletan.github.io/Beeline/>.
 
-Milestones 0–5 are complete. All 19 tests pass, strict TypeScript compilation succeeds, representative full-dictionary boards have exact replay-verified solutions, and the complete browser play loop has been exercised with an optimal solution. `DAILY_MODE` remains `false` for playtesting, so each load and each New puzzle action creates a fresh verified board.
+Milestones 0–5 are complete. All 19 tests pass, strict TypeScript compilation succeeds, representative full-dictionary boards have exact replay-verified solutions, and the complete browser play loop has been exercised with an optimal solution. `DAILY_MODE` is `true` for launch, so each local calendar date has one reproducible verified puzzle.
 
 ### SpellSweep relationship
 
@@ -118,12 +118,13 @@ These decisions should be treated as current requirements unless the user explic
 There will be one obvious switch in the browser code:
 
 ```ts
-const DAILY_MODE = false;
+const DAILY_MODE = true;
 ```
 
-- Keep it `false` during development and playtesting.
+- Keep it `false` during development and rapid playtesting.
 - When `false`, a page load generates a fresh random, verified-solvable test puzzle.
 - When `true`, the local calendar date seeds puzzle generation so reloading produces that day's same puzzle.
+- The release build currently keeps it `true`.
 - This must remain a plain boolean, not a feature-flag or configuration system.
 
 ### Initial interface scope
@@ -131,7 +132,7 @@ const DAILY_MODE = false;
 The first interface only needs to make the game understandable and playable:
 
 - the 61-tile hex board;
-- selected-path order and candidate word;
+- selected path and candidate word;
 - wildcard letter entry when needed;
 - clear and submit controls;
 - visible active tiles;
@@ -408,7 +409,7 @@ Every returned benchmark answer replayed as legal submissions and completed its 
 - [x] Generate 60 ordinary letters and put the wildcard at the center.
 - [x] Reject candidates that fail the cheap solvability precheck.
 - [x] Run the exact solver for accepted candidates and retain their Perfect score and one solution.
-- [x] Keep `const DAILY_MODE = false` as the sole mode switch.
+- [x] Keep one obvious `DAILY_MODE` boolean as the sole mode switch.
 - [x] In development mode, generate a fresh verified puzzle on each page load.
 - [x] In daily mode, seed generation from the local date and reproduce the same board and solution on reload.
 - [x] Confirm that different development random inputs can produce different boards.
@@ -495,18 +496,18 @@ Completion criteria: either the measured game already performs acceptably and no
 - [ ] Verify keyboard operation, focus visibility, screen-reader labels, and reduced-motion behavior if motion is added.
 - [ ] Add only those transitions or animations that make state changes easier to understand.
 - [x] Add an accessible tutorial dialog, reveal confirmation, result/share dialog, and manual-copy fallback.
-- [x] Add a compact feedback/support footer.
+- [x] Add a prominent feedback/support footer.
 - [ ] Decide whether puzzle persistence is worthwhile based on playtesting.
 - [x] Keep all asset and module paths compatible with a GitHub Pages project subdirectory.
 - [x] Add the smallest understandable GitHub Pages deployment workflow.
-- [ ] Set the intended release value of `DAILY_MODE` with a one-line change.
+- [x] Set the intended release value of `DAILY_MODE` with a one-line change.
 - [x] Build and test the deployed static site.
 
 Completion criteria: the stable game is attractive, accessible, and deployed as a static site without a backend or unnecessary application framework.
 
-Interface update (September 20, 2026): Beeline now opens a seven-step tutorial on the first visit and keeps a How to play button available afterward. Revealing an unfinished answer requires confirmation and ends that run; both completion and reveal open a result dialog that offers spoiler-free share text, clipboard copying, and a manual-copy fallback. A persistent Share result button reopens the dialog after it is closed. The page also has a compact feedback/support footer. Browser verification covered tutorial navigation, reveal and share behavior, an ordinary two-word Perfect completion, result reopening, and a 347-pixel-wide viewport with no horizontal overflow.
+Interface update (September 21, 2026): Beeline now opens a nine-step worked-example tutorial on the first visit and keeps a How to play button available afterward. Revealing an unfinished answer requires confirmation and ends that run; both completion and reveal open a result dialog that offers spoiler-free share text, clipboard copying, and a manual-copy fallback. A revealed run is shared as “This one beat me.” A persistent Share result button reopens the dialog after it is closed. The page also has a larger feedback/support footer. Browser verification covered tutorial navigation, reveal and share behavior, an ordinary two-word Perfect completion, result reopening, and a 347-pixel-wide viewport with no horizontal overflow.
 
-Deployment progress (September 18, 2026): the small GitHub Actions workflow runs the 19 tests, compiles TypeScript, assembles only the static browser assets, and deploys them through GitHub Pages. The first successful run completed in 46 seconds. The public `/Beeline/` URL loaded the dictionary and compiled modules correctly, generated a verified Perfect-4 board, accepted tile interaction, and reported no browser console warnings or errors. Deployment is complete, while Milestone 8 remains open because visual polish and the final `DAILY_MODE` decision intentionally follow playtesting.
+Deployment progress (September 21, 2026): the small GitHub Actions workflow runs the 19 tests, compiles TypeScript, assembles only the static browser assets, and deploys them through GitHub Pages. The public `/Beeline/` URL loads the dictionary and compiled modules correctly, accepts tile interaction, and reports no browser console warnings or errors. Release mode uses the reproducible daily puzzle and no longer exposes puzzle-generation diagnostics or the development New puzzle control. Deployment is complete, while the remaining Milestone 8 accessibility and visual-polish checks stay open.
 
 ---
 
@@ -534,8 +535,8 @@ pnpm build
 pnpm serve
 ```
 
-Then open <http://127.0.0.1:4173/>. `DAILY_MODE` is intentionally `false`, so New puzzle and page reloads both provide fresh verified boards. The collapsed Perfect-solution panel is a debugging aid; leave it closed for an honest playtest.
+Then open <http://127.0.0.1:4173/>. `DAILY_MODE` is `true`, so reloading on the same local date returns to the same verified board. The collapsed Perfect-solution panel is a debugging aid; leave it closed for an honest playtest.
 
-The same development-mode build is publicly playable at <https://blendletan.github.io/Beeline/>. Every push to `main` runs the tests and compiler before GitHub Pages deployment.
+The same daily release build is publicly playable at <https://blendletan.github.io/Beeline/>. Every push to `main` runs the tests and compiler before GitHub Pages deployment.
 
-Record concrete observations about puzzle difficulty, obscure dictionary words, the usefulness of two-letter words, clarity of the any-opposite-edge goal, and comfort of path entry before changing rules or polishing the presentation. Do not begin tutorials, sharing, persistence, elaborate animation, branding, deployment, or performance architecture until playtesting supplies a reason.
+Record launch observations about puzzle difficulty, obscure dictionary words, the usefulness of two-letter words, clarity of the any-opposite-edge goal, and comfort of path entry before changing rules or adding more presentation or performance work.

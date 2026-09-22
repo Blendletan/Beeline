@@ -12,7 +12,7 @@ import {
   type GeneratedPuzzle,
 } from "./game.js";
 
-const DAILY_MODE = false;
+const DAILY_MODE = true;
 const SHARE_URL = "https://blendletan.github.io/Beeline/";
 const TUTORIAL_STORAGE_KEY = "beelineTutorialSeenV2";
 
@@ -158,7 +158,6 @@ const wildcardControl = requiredElement<HTMLLabelElement>("wildcard-control");
 const wildcardInput = requiredElement<HTMLInputElement>("wildcard-letter");
 const clearButton = requiredElement<HTMLButtonElement>("clear-path");
 const submitButton = requiredElement<HTMLButtonElement>("submit-word");
-const newPuzzleButton = requiredElement<HTMLButtonElement>("new-puzzle");
 const showTutorialButton = requiredElement<HTMLButtonElement>("show-tutorial");
 const messageElement = requiredElement<HTMLParagraphElement>("message");
 const noWordsElement = requiredElement<HTMLParagraphElement>("no-words");
@@ -215,7 +214,6 @@ let tutorialStepIndex = 0;
 
 clearButton.addEventListener("click", clearSelection);
 submitButton.addEventListener("click", submitSelection);
-newPuzzleButton.addEventListener("click", () => void startPuzzle());
 showTutorialButton.addEventListener("click", openTutorial);
 closeTutorialButton.addEventListener("click", () => tutorialDialog.close());
 tutorialBackButton.addEventListener("click", () => {
@@ -248,8 +246,7 @@ document.addEventListener("keydown", (event) => {
     !submitButton.disabled &&
     !tutorialDialog.open &&
     !revealWarningDialog.open &&
-    !resultDialog.open &&
-    event.target !== newPuzzleButton
+    !resultDialog.open
   ) {
     submitSelection();
   }
@@ -271,8 +268,7 @@ async function loadGame(): Promise<void> {
     }
   } catch (error) {
     console.error(error);
-    loadingElement.textContent =
-      "The dictionary could not be loaded. Run Beeline from a local web server.";
+    loadingElement.textContent = "Beeline could not load. Please refresh and try again.";
     loadingElement.classList.add("error");
   }
 }
@@ -284,19 +280,14 @@ async function startPuzzle(): Promise<void> {
   if (revealWarningDialog.open) {
     revealWarningDialog.close();
   }
-  newPuzzleButton.disabled = true;
   revealAnswerButton.disabled = true;
   gameElement.hidden = true;
   loadingElement.hidden = false;
-  loadingElement.textContent = DAILY_MODE
-    ? "Loading today’s verified puzzle…"
-    : "Generating and solving a fresh puzzle…";
+  loadingElement.textContent = "Loading today’s puzzle…";
 
   await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 
-  const generationStarted = performance.now();
   puzzle = selectPuzzle(dictionary, DAILY_MODE);
-  const generationMilliseconds = Math.round(performance.now() - generationStarted);
   game = createGame(puzzle.board);
   selectedPath = [];
   revealedPath = [];
@@ -307,15 +298,9 @@ async function startPuzzle(): Promise<void> {
 
   loadingElement.hidden = true;
   gameElement.hidden = false;
-  newPuzzleButton.textContent = DAILY_MODE ? "Restart puzzle" : "New puzzle";
-  newPuzzleButton.disabled = false;
   revealAnswerButton.disabled = false;
   renderSolution();
   render();
-  showMessage(
-    `Verified in ${puzzle.attempts} ${puzzle.attempts === 1 ? "attempt" : "attempts"} (${generationMilliseconds.toLocaleString()} ms).`,
-    "neutral",
-  );
 }
 
 function chooseTile(tileIndex: number): void {
@@ -565,7 +550,7 @@ function runEnded(): boolean {
 function resultSummary(): string {
   const perfectLabel = `${puzzle.perfect} ${puzzle.perfect === 1 ? "word" : "words"}`;
   if (gaveUp) {
-    return `Answer revealed · Perfect was ${perfectLabel}`;
+    return `This one beat me · Perfect was ${perfectLabel}`;
   }
 
   const scoreLabel = `${game.wordsUsed} ${game.wordsUsed === 1 ? "word" : "words"}`;
