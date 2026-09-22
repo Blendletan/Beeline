@@ -3,19 +3,42 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Beeline</title>
+  <title>Beeline | RMLP</title>
   <meta
     name="description"
     content="Build words across a hexagonal letter board and connect any pair of opposite sides."
   />
+  <meta name="theme-color" content="#f3f1e8" />
+  <link rel="icon" type="image/png" href="./beeline-logo.png" />
+  <link rel="apple-touch-icon" href="./beeline-logo.png" />
   <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
   <main class="page-shell">
     <header class="game-header">
-      <div>
-        <p class="eyebrow">Hex connection word puzzle</p>
-        <h1>Beeline</h1>
+      <div class="header-branding">
+        <div class="publisher-lockup" aria-label="An RMLP puzzle">
+          <img
+            class="publisher-mark"
+            src="./rmlp-logo-mark.svg"
+            width="64"
+            height="64"
+            alt=""
+            aria-hidden="true"
+          />
+          <span>RMLP puzzle</span>
+        </div>
+        <div class="title-lockup">
+          <img
+            class="beeline-mark"
+            src="./beeline-logo.png"
+            width="1254"
+            height="1254"
+            alt=""
+            aria-hidden="true"
+          />
+          <h1>Beeline</h1>
+        </div>
       </div>
       <div class="header-actions">
         <button id="show-tutorial" class="secondary-button" type="button">
@@ -183,7 +206,17 @@
       ×
     </button>
     <p class="dialog-eyebrow">Your result</p>
-    <h2 id="result-dialog-title">Beeline</h2>
+    <div class="result-brand">
+      <img
+        class="result-brand-mark"
+        src="./beeline-logo.png"
+        width="1254"
+        height="1254"
+        alt=""
+        aria-hidden="true"
+      />
+      <h2 id="result-dialog-title">Beeline</h2>
+    </div>
     <p id="result-dialog-summary" class="result-dialog-summary"></p>
     <p class="result-invitation">Share your result without revealing the solution.</p>
     <button id="copy-result" class="primary-button" type="button">Share result</button>
