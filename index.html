@@ -129,8 +129,28 @@
         ×
       </button>
     </div>
-    <div id="tutorial-illustration" class="tutorial-illustration" aria-hidden="true"></div>
-    <p id="tutorial-description" class="dialog-description"></p>
+    <p
+      id="tutorial-description"
+      class="dialog-description"
+      aria-live="polite"
+      aria-atomic="true"
+    ></p>
+    <section id="tutorial-example" class="tutorial-example">
+      <div class="tutorial-score-row" aria-label="Example score">
+        <span>Words <strong id="tutorial-score">0</strong></span>
+        <span>Perfect <strong id="tutorial-perfect">2</strong></span>
+      </div>
+      <div class="tutorial-board-wrap">
+        <div
+          id="tutorial-board"
+          class="tutorial-board"
+          role="img"
+          aria-label="Example Beeline board"
+        ></div>
+      </div>
+      <p id="tutorial-current-word" class="tutorial-current-word"></p>
+      <div id="tutorial-words" class="tutorial-words" aria-label="Example words played"></div>
+    </section>
     <div class="tutorial-progress-row">
       <span id="tutorial-step-count"></span>
       <div id="tutorial-progress" class="tutorial-progress" aria-hidden="true"></div>

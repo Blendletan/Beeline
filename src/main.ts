@@ -14,52 +14,139 @@ import {
 
 const DAILY_MODE = false;
 const SHARE_URL = "https://blendletan.github.io/Beeline/";
-const TUTORIAL_STORAGE_KEY = "beelineTutorialSeen";
+const TUTORIAL_STORAGE_KEY = "beelineTutorialSeenV2";
 
-const TUTORIAL_STEPS = [
+const TUTORIAL_BOARD = [
+  ..."htaoinohrdlucnfwypvbgejqxzetao?nshrdlucefwypvbgljqxzetloinshw",
+];
+const TUTORIAL_HONEY_PATH = [0, 6, 13, 21, 30];
+const TUTORIAL_BELL_PATH = [30, 39, 47, 54];
+const TUTORIAL_LOW_PATH = [54, 55, 60];
+const TUTORIAL_YELLOW_PATH = [30, 39, 47, 54, 55, 60];
+const TUTORIAL_HONEY_BELL = [
+  ...new Set([...TUTORIAL_HONEY_PATH, ...TUTORIAL_BELL_PATH]),
+];
+const TUTORIAL_COMPLETE_PATH = [
+  ...new Set([...TUTORIAL_HONEY_PATH, ...TUTORIAL_YELLOW_PATH]),
+];
+
+type TutorialStep = {
+  readonly title: string;
+  readonly description: string;
+  readonly score: number;
+  readonly active: readonly number[];
+  readonly highlighted: readonly number[];
+  readonly highlightTone?: "selection" | "solution";
+  readonly currentWord: string;
+  readonly wildcardLetter?: string;
+  readonly words: readonly string[];
+  readonly connected?: boolean;
+  readonly comparison?: boolean;
+};
+
+const TUTORIAL_STEPS: readonly TutorialStep[] = [
   {
     title: "Welcome to Beeline",
-    illustration: "B  E  E  L  I  N  E",
     description:
-      "This quick tour explains the rules. Select Next to continue, or close it and start playing right away.",
+      "Build valid words into one connected network from an edge to the edge directly opposite it. Any of the three directions can win; this example uses the softly marked edges.",
+    score: 0,
+    active: [],
+    highlighted: [],
+    currentWord: "No words played yet",
+    words: [],
   },
   {
     title: "Make a word",
-    illustration: "B → E → E",
     description:
-      "Select touching letter tiles in order to spell a valid word. A tile cannot be used twice in the same word.",
+      "Select HONEY through five touching tiles from the edge to the center. A tile cannot repeat within one word, and the ? stands for Y here.",
+    score: 0,
+    active: [],
+    highlighted: TUTORIAL_HONEY_PATH,
+    highlightTone: "selection",
+    currentWord: "HONEY · ? = Y",
+    wildcardLetter: "y",
+    words: [],
   },
   {
-    title: "Build a network",
-    illustration: "BEE + LINE",
+    title: "Active tiles stay connected",
     description:
-      "Every accepted word permanently activates its tiles. Active tiles connect whenever they touch, even when different words activated them.",
+      "After submission, HONEY stays green. Its tiles are now part of your network and may be reused in later words.",
+    score: 1,
+    active: TUTORIAL_HONEY_PATH,
+    highlighted: [],
+    currentWord: "HONEY accepted",
+    words: ["HONEY"],
   },
   {
-    title: "Connect opposite edges",
-    illustration: "EDGE  ⇢  EDGE",
+    title: "Reuse tiles and the wildcard",
     description:
-      "Win by building one connected path from any board edge to the edge directly opposite it. You only need one crossing.",
+      "Select BELL from the active center tile to extend the network. The same ? can change between words; here it stands for B.",
+    score: 1,
+    active: TUTORIAL_HONEY_PATH,
+    highlighted: TUTORIAL_BELL_PATH,
+    highlightTone: "selection",
+    currentWord: "BELL · ? = B",
+    wildcardLetter: "b",
+    words: ["HONEY"],
   },
   {
-    title: "Use the wildcard",
-    illustration: "? = any letter",
+    title: "Grow one network",
     description:
-      "The center ? can stand for one letter in a word. Enter that letter when you use it; the wildcard can change in later words.",
+      "HONEY and BELL now form one connected chain. A word does not need to reach an edge by itself; all active touching tiles work together.",
+    score: 2,
+    active: TUTORIAL_HONEY_BELL,
+    highlighted: [],
+    currentWord: "2 words played",
+    words: ["HONEY", "BELL"],
   },
   {
-    title: "Use fewer words",
-    illustration: "Words 3  ·  Perfect 2",
+    title: "Reach the other edge",
     description:
-      "Your score is the number of accepted words. Perfect is the exact fewest words that can solve this board, so lower is better.",
+      "Select LOW from the final active L in BELL to reach the opposite edge. Submitting it will connect the two marked edges.",
+    score: 2,
+    active: TUTORIAL_HONEY_BELL,
+    highlighted: TUTORIAL_LOW_PATH,
+    highlightTone: "selection",
+    currentWord: "LOW",
+    words: ["HONEY", "BELL"],
+  },
+  {
+    title: "A valid solution",
+    description:
+      "The puzzle is solved in 3 words. Perfect is 2, so this route works—but there is a shorter beeline.",
+    score: 3,
+    active: TUTORIAL_COMPLETE_PATH,
+    highlighted: [],
+    currentWord: "Connected in 3 words",
+    words: ["HONEY", "BELL", "LOW"],
+    connected: true,
+  },
+  {
+    title: "The missed shortcut",
+    description:
+      "YELLOW replaces BELL plus LOW and reaches the same edge in one word. HONEY + YELLOW is the Perfect 2-word solution.",
+    score: 2,
+    active: TUTORIAL_COMPLETE_PATH,
+    highlighted: TUTORIAL_YELLOW_PATH,
+    highlightTone: "solution",
+    currentWord: "YELLOW · ? = Y",
+    wildcardLetter: "y",
+    words: ["HONEY", "YELLOW"],
+    connected: true,
+    comparison: true,
   },
   {
     title: "Ready to play",
-    illustration: "Find your beeline!",
     description:
-      "Reuse active tiles when helpful and look for efficient crossings. Revealing the answer ends an unfinished run, and you can reopen this tutorial at any time.",
+      "Make touching-letter words, reuse active tiles, and connect an edge to the one directly opposite it. Lower word counts are better; Reveal Answer ends an unfinished run.",
+    score: 2,
+    active: TUTORIAL_COMPLETE_PATH,
+    highlighted: [],
+    currentWord: "Perfect: 2 words",
+    words: ["HONEY", "YELLOW"],
+    connected: true,
   },
-] as const;
+];
 
 const loadingElement = requiredElement<HTMLElement>("loading");
 const gameElement = requiredElement<HTMLElement>("game");
@@ -83,12 +170,16 @@ const solutionWordsElement = requiredElement<HTMLOListElement>("solution-words")
 const tutorialDialog = requiredElement<HTMLDialogElement>("tutorial-dialog");
 const closeTutorialButton = requiredElement<HTMLButtonElement>("close-tutorial");
 const tutorialTitleElement = requiredElement<HTMLHeadingElement>("tutorial-title");
-const tutorialIllustrationElement = requiredElement<HTMLDivElement>(
-  "tutorial-illustration",
-);
 const tutorialDescriptionElement = requiredElement<HTMLParagraphElement>(
   "tutorial-description",
 );
+const tutorialExampleElement = requiredElement<HTMLElement>("tutorial-example");
+const tutorialScoreElement = requiredElement<HTMLElement>("tutorial-score");
+const tutorialBoardElement = requiredElement<HTMLDivElement>("tutorial-board");
+const tutorialCurrentWordElement = requiredElement<HTMLParagraphElement>(
+  "tutorial-current-word",
+);
+const tutorialWordsElement = requiredElement<HTMLDivElement>("tutorial-words");
 const tutorialStepCountElement = requiredElement<HTMLElement>("tutorial-step-count");
 const tutorialProgressElement = requiredElement<HTMLDivElement>("tutorial-progress");
 const tutorialBackButton = requiredElement<HTMLButtonElement>("tutorial-back");
@@ -316,8 +407,6 @@ function render(): void {
       const coordinate = HEX_COORDINATES[tileIndex];
       const selectedPosition = selectedPath.indexOf(tileIndex);
       const revealedPosition = revealedPath.indexOf(tileIndex);
-      const pathPosition =
-        selectedPosition === -1 ? revealedPosition : selectedPosition;
       const button = document.createElement("button");
       const x = coordinate.q * 0.75;
       const y = (coordinate.r + coordinate.q / 2) * 0.8660254;
@@ -340,19 +429,12 @@ function render(): void {
         "aria-label",
         `${tile === WILDCARD ? "Wildcard" : tile.toUpperCase()} tile${
           game.active[tileIndex] ? ", active" : ", inactive"
-        }${selectedPosition === -1 ? "" : `, selection ${selectedPosition + 1}`}`,
+        }${selectedPosition === -1 ? "" : ", selected"}`,
       );
 
       const letter = document.createElement("span");
       letter.textContent = tile;
       button.append(letter);
-
-      if (pathPosition !== -1) {
-        const order = document.createElement("span");
-        order.className = "path-order";
-        order.textContent = String(pathPosition + 1);
-        button.append(order);
-      }
 
       button.addEventListener("click", () => chooseTile(tileIndex));
       return button;
@@ -541,8 +623,31 @@ function openTutorial(): void {
 function renderTutorial(): void {
   const step = TUTORIAL_STEPS[tutorialStepIndex];
   tutorialTitleElement.textContent = step.title;
-  tutorialIllustrationElement.textContent = step.illustration;
   tutorialDescriptionElement.textContent = step.description;
+  tutorialScoreElement.textContent = String(step.score);
+  tutorialExampleElement.classList.toggle("connected", step.connected === true);
+  renderTutorialBoard(step);
+  tutorialCurrentWordElement.textContent = step.currentWord;
+  tutorialWordsElement.replaceChildren(
+    ...(step.comparison
+      ? [
+          tutorialWordChip("HONEY"),
+          tutorialWordChip("BELL", "replaced"),
+          tutorialWordChip("+", "operator"),
+          tutorialWordChip("LOW", "replaced"),
+          tutorialWordChip("→", "operator"),
+          tutorialWordChip("YELLOW", "better"),
+        ]
+      : step.words.length === 0
+        ? [tutorialWordChip("Words will appear here", "empty")]
+        : step.words.map((word) => tutorialWordChip(word))),
+  );
+  tutorialWordsElement.setAttribute(
+    "aria-label",
+    step.words.length === 0
+      ? "No example words played yet"
+      : `Example words played: ${step.words.join(", ")}`,
+  );
   tutorialStepCountElement.textContent = `Step ${tutorialStepIndex + 1} of ${TUTORIAL_STEPS.length}`;
   tutorialProgressElement.replaceChildren(
     ...TUTORIAL_STEPS.map((_, index) => {
@@ -555,6 +660,67 @@ function renderTutorial(): void {
   tutorialBackButton.disabled = tutorialStepIndex === 0;
   tutorialNextButton.textContent =
     tutorialStepIndex === TUTORIAL_STEPS.length - 1 ? "Start playing" : "Next";
+}
+
+function renderTutorialBoard(step: TutorialStep): void {
+  const active = new Set(step.active);
+  const highlighted = new Set(step.highlighted);
+
+  tutorialBoardElement.replaceChildren(
+    ...TUTORIAL_BOARD.map((tile, tileIndex) => {
+      const coordinate = HEX_COORDINATES[tileIndex];
+      const x = coordinate.q * 0.75;
+      const y = (coordinate.r + coordinate.q / 2) * 0.8660254;
+      const cell = document.createElement("span");
+      const isHighlighted = highlighted.has(tileIndex);
+      const shownLetter =
+        tile === WILDCARD && isHighlighted && step.wildcardLetter
+          ? step.wildcardLetter
+          : tile;
+
+      cell.className = "tutorial-tile";
+      cell.setAttribute("aria-hidden", "true");
+      cell.style.setProperty("--left", `${50 + x * 11.5}%`);
+      cell.style.setProperty("--top", `${50 + y * 11.5}%`);
+      cell.classList.toggle("active", active.has(tileIndex));
+      cell.classList.toggle(
+        "selected",
+        isHighlighted && step.highlightTone === "selection",
+      );
+      cell.classList.toggle(
+        "revealed",
+        isHighlighted && step.highlightTone === "solution",
+      );
+      cell.classList.toggle("wildcard", tile === WILDCARD);
+      cell.classList.toggle(
+        "target-edge",
+        coordinate.q === -4 || coordinate.q === 4,
+      );
+      cell.textContent = shownLetter;
+      return cell;
+    }),
+  );
+
+  const highlightedWord =
+    step.highlighted.length === 0
+      ? ""
+      : ` ${step.currentWord.split(" · ")[0]} is highlighted.`;
+  tutorialBoardElement.setAttribute(
+    "aria-label",
+    `Example board with ${step.active.length} active tiles.${highlightedWord}${
+      step.connected ? " Opposite edges are connected." : ""
+    }`,
+  );
+}
+
+function tutorialWordChip(
+  text: string,
+  tone: "normal" | "replaced" | "better" | "operator" | "empty" = "normal",
+): HTMLSpanElement {
+  const chip = document.createElement("span");
+  chip.className = `tutorial-word ${tone}`;
+  chip.textContent = text;
+  return chip;
 }
 
 function hasSeenTutorial(): boolean {
