@@ -4,8 +4,11 @@ import {
   areAdjacent,
   createDictionaryIndex,
   createGame,
+  localDateKey,
   parseDictionary,
+  restoreDailyProgress,
   selectPuzzle,
+  serializeDailyProgress,
   submitWord,
   type DictionaryIndex,
   type GameState,
@@ -15,6 +18,7 @@ import {
 const DAILY_MODE = true;
 const SHARE_URL = "https://blendletan.github.io/Beeline/";
 const TUTORIAL_STORAGE_KEY = "beelineTutorialSeenV2";
+const DAILY_PROGRESS_COOKIE_NAME = "beelineDailyProgress";
 
 const TUTORIAL_BOARD = [
   ..."htaoinohrdlucnfwypvbgejqxzetao?nshrdlucefwypvbgljqxzetloinshw",
@@ -211,6 +215,7 @@ let playedWords: string[] = [];
 let answerRevealed = false;
 let gaveUp = false;
 let tutorialStepIndex = 0;
+let activeDateKey = localDateKey(new Date());
 
 clearButton.addEventListener("click", clearSelection);
 submitButton.addEventListener("click", submitSelection);
@@ -238,6 +243,7 @@ copyResultButton.addEventListener("click", () => void copyShareResult());
 wildcardInput.addEventListener("input", () => {
   wildcardInput.value = wildcardInput.value.replace(/[^a-z]/gi, "").slice(0, 1);
   renderSelection();
+  persistDailyProgress();
 });
 document.addEventListener("keydown", (event) => {
   if (
@@ -263,6 +269,7 @@ async function loadGame(): Promise<void> {
 
     dictionary = createDictionaryIndex(parseDictionary(await response.text()));
     await startPuzzle();
+    window.setInterval(() => void checkForNewDailyPuzzle(), 30_000);
     if (!hasSeenTutorial()) {
       openTutorial();
     }
@@ -287,20 +294,40 @@ async function startPuzzle(): Promise<void> {
 
   await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 
-  puzzle = selectPuzzle(dictionary, DAILY_MODE);
-  game = createGame(puzzle.board);
-  selectedPath = [];
-  revealedPath = [];
-  playedWords = [];
-  answerRevealed = false;
-  gaveUp = false;
-  wildcardInput.value = "";
+  const now = new Date();
+  activeDateKey = localDateKey(now);
+  puzzle = selectPuzzle(dictionary, DAILY_MODE, now);
+  const saved = DAILY_MODE
+    ? restoreDailyProgress(
+        readCookie(DAILY_PROGRESS_COOKIE_NAME),
+        activeDateKey,
+        puzzle,
+        dictionary,
+      )
+    : undefined;
+  game = saved?.game ?? createGame(puzzle.board);
+  selectedPath = [...(saved?.selectedPath ?? [])];
+  playedWords = [...(saved?.playedWords ?? [])];
+  answerRevealed = saved?.answerRevealed ?? false;
+  gaveUp = saved?.gaveUp ?? false;
+  wildcardInput.value = saved?.wildcardLetter ?? "";
+  revealedPath =
+    saved && saved.selectedAnswerIndex >= 0
+      ? (puzzle.solution[saved.selectedAnswerIndex]?.path ?? [])
+      : [];
 
   loadingElement.hidden = true;
   gameElement.hidden = false;
   revealAnswerButton.disabled = false;
   renderSolution();
   render();
+  persistDailyProgress();
+}
+
+async function checkForNewDailyPuzzle(): Promise<void> {
+  if (DAILY_MODE && localDateKey(new Date()) !== activeDateKey) {
+    await startPuzzle();
+  }
 }
 
 function chooseTile(tileIndex: number): void {
@@ -330,6 +357,7 @@ function chooseTile(tileIndex: number): void {
     wildcardInput.value = "";
   }
   render();
+  persistDailyProgress();
 }
 
 function clearSelection(): void {
@@ -338,6 +366,7 @@ function clearSelection(): void {
   wildcardInput.value = "";
   render();
   showMessage("Selection cleared.", "neutral");
+  persistDailyProgress();
 }
 
 function submitSelection(): void {
@@ -352,6 +381,7 @@ function submitSelection(): void {
       word ? `${word.toUpperCase()} is not in the dictionary.` : "That is not a valid word.",
       "error",
     );
+    persistDailyProgress();
     return;
   }
 
@@ -360,6 +390,7 @@ function submitSelection(): void {
   selectedPath = [];
   wildcardInput.value = "";
   render();
+  persistDailyProgress();
 
   if (game.completed) {
     const comparison =
@@ -496,6 +527,7 @@ function renderSolution(): void {
         wildcardInput.value = "";
         revealedPath = alreadyRevealed ? [] : path;
         render();
+        persistDailyProgress();
         showMessage(
           alreadyRevealed
             ? "Solution path hidden."
@@ -534,6 +566,7 @@ function revealAnswer(): void {
   wildcardInput.value = "";
   revealedPath = puzzle.solution[0]?.path ?? [];
   render();
+  persistDailyProgress();
   showMessage(
     gaveUp
       ? "Answer revealed. This run has ended."
@@ -722,6 +755,52 @@ function rememberTutorialSeen(): void {
   } catch {
     // The tutorial remains available even when storage is blocked.
   }
+}
+
+function persistDailyProgress(): void {
+  if (!DAILY_MODE || !game || !puzzle) {
+    return;
+  }
+
+  const selectedAnswerIndex = puzzle.solution.findIndex(({ path }) =>
+    pathsMatch(path, revealedPath),
+  );
+  const encodedProgress = serializeDailyProgress(activeDateKey, puzzle, {
+    game,
+    playedWords,
+    answerRevealed,
+    gaveUp,
+    selectedPath,
+    wildcardLetter: wildcardInput.value,
+    selectedAnswerIndex,
+  });
+  const expires = new Date();
+  expires.setHours(24, 0, 0, 0);
+
+  try {
+    document.cookie = `${DAILY_PROGRESS_COOKIE_NAME}=${encodedProgress}; Expires=${expires.toUTCString()}; Path=/; SameSite=Lax`;
+  } catch {
+    // The game remains playable when cookies are unavailable.
+  }
+}
+
+function readCookie(name: string): string | undefined {
+  const prefix = `${name}=`;
+  return document.cookie
+    .split(";")
+    .map((cookie) => cookie.trim())
+    .find((cookie) => cookie.startsWith(prefix))
+    ?.slice(prefix.length);
+}
+
+function pathsMatch(
+  first: readonly number[],
+  second: readonly number[],
+): boolean {
+  return (
+    first.length === second.length &&
+    first.every((tileIndex, index) => tileIndex === second[index])
+  );
 }
 
 function showMessage(

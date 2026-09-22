@@ -25,8 +25,10 @@ import {
   localDateKey,
   minimumConnectionSolution,
   parseDictionary,
+  restoreDailyProgress,
   seededRandom,
   selectPuzzle,
+  serializeDailyProgress,
   submitWord,
   tileIndexAt,
   type WordPath,
@@ -433,4 +435,177 @@ test("development selection honors its supplied fresh random source", () => {
   assert.deepEqual(secondPuzzle.board, secondBoard);
   assert.equal(firstPuzzle.perfect, 1);
   assert.equal(secondPuzzle.perfect, 1);
+});
+
+test("daily progress restores accepted words and an unfinished selection", () => {
+  const board = boardWith();
+  const winningPath = qDiameter();
+  const winningWord = "z".repeat(winningPath.length);
+  const playedPath = winningPath.slice(0, 2);
+  const selectedPath = [WILDCARD_INDEX, NEIGHBORS[WILDCARD_INDEX][0]];
+  const dictionary = createDictionaryIndex(new Set(["zz", winningWord]));
+  const submission = submitWord(
+    createGame(board),
+    playedPath,
+    "zz",
+    dictionary.words,
+  );
+  const puzzle = {
+    board,
+    solution: [{ word: winningWord, path: winningPath }],
+    perfect: 1,
+    attempts: 1,
+    rawCandidateCount: 1,
+    reducedCandidateCount: 1,
+    statesByDepth: [1, 1],
+  };
+  const encoded = serializeDailyProgress("2026-09-22", puzzle, {
+    game: submission.state,
+    playedWords: ["zz"],
+    answerRevealed: false,
+    gaveUp: false,
+    selectedPath,
+    wildcardLetter: "a",
+    selectedAnswerIndex: -1,
+  });
+  const restored = restoreDailyProgress(
+    encoded,
+    "2026-09-22",
+    puzzle,
+    dictionary,
+  );
+
+  assert.deepEqual(restored?.game.active, submission.state.active);
+  assert.equal(restored?.game.wordsUsed, 1);
+  assert.equal(restored?.game.completed, false);
+  assert.deepEqual(restored?.playedWords, ["zz"]);
+  assert.deepEqual(restored?.selectedPath, selectedPath);
+  assert.equal(restored?.wildcardLetter, "a");
+  assert.equal(restored?.gaveUp, false);
+});
+
+test("daily progress derives completed and revealed outcomes", () => {
+  const board = boardWith();
+  const winningPath = qDiameter();
+  const winningWord = "z".repeat(winningPath.length);
+  const dictionary = createDictionaryIndex(new Set([winningWord]));
+  const puzzle = {
+    board,
+    solution: [{ word: winningWord, path: winningPath }],
+    perfect: 1,
+    attempts: 1,
+    rawCandidateCount: 1,
+    reducedCandidateCount: 1,
+    statesByDepth: [1, 1],
+  };
+  const completed = submitWord(
+    createGame(board),
+    winningPath,
+    winningWord,
+    dictionary.words,
+  ).state;
+  const completedCookie = serializeDailyProgress("2026-09-22", puzzle, {
+    game: completed,
+    playedWords: [winningWord],
+    answerRevealed: true,
+    gaveUp: false,
+    selectedPath: [],
+    wildcardLetter: "",
+    selectedAnswerIndex: 0,
+  });
+  const incompleteCookie = serializeDailyProgress("2026-09-22", puzzle, {
+    game: createGame(board),
+    playedWords: [],
+    answerRevealed: true,
+    gaveUp: true,
+    selectedPath: [],
+    wildcardLetter: "",
+    selectedAnswerIndex: 0,
+  });
+
+  const restoredCompleted = restoreDailyProgress(
+    completedCookie,
+    "2026-09-22",
+    puzzle,
+    dictionary,
+  );
+  const restoredGiveUp = restoreDailyProgress(
+    incompleteCookie,
+    "2026-09-22",
+    puzzle,
+    dictionary,
+  );
+
+  assert.equal(restoredCompleted?.game.completed, true);
+  assert.equal(restoredCompleted?.gaveUp, false);
+  assert.equal(restoredCompleted?.answerRevealed, true);
+  assert.equal(restoredGiveUp?.game.completed, false);
+  assert.equal(restoredGiveUp?.gaveUp, true);
+  assert.equal(restoredGiveUp?.answerRevealed, true);
+});
+
+test("daily progress rejects stale, malformed, or inconsistent cookies", () => {
+  const board = boardWith();
+  const winningPath = qDiameter();
+  const winningWord = "z".repeat(winningPath.length);
+  const dictionary = createDictionaryIndex(new Set([winningWord]));
+  const puzzle = {
+    board,
+    solution: [{ word: winningWord, path: winningPath }],
+    perfect: 1,
+    attempts: 1,
+    rawCandidateCount: 1,
+    reducedCandidateCount: 1,
+    statesByDepth: [1, 1],
+  };
+  const validEncoded = serializeDailyProgress("2026-09-22", puzzle, {
+    game: createGame(board),
+    playedWords: [],
+    answerRevealed: false,
+    gaveUp: false,
+    selectedPath: [],
+    wildcardLetter: "",
+    selectedAnswerIndex: -1,
+  });
+  const valid = JSON.parse(decodeURIComponent(validEncoded)) as Record<
+    string,
+    unknown
+  >;
+  const encode = (value: unknown) => encodeURIComponent(JSON.stringify(value));
+
+  assert.equal(
+    restoreDailyProgress(validEncoded, "2026-09-23", puzzle, dictionary),
+    undefined,
+  );
+  assert.equal(
+    restoreDailyProgress(
+      encode({ ...valid, board: `x${String(valid.board).slice(1)}` }),
+      "2026-09-22",
+      puzzle,
+      dictionary,
+    ),
+    undefined,
+  );
+  assert.equal(
+    restoreDailyProgress(
+      encode({ ...valid, selectedPath: [0, TILE_COUNT] }),
+      "2026-09-22",
+      puzzle,
+      dictionary,
+    ),
+    undefined,
+  );
+  assert.equal(
+    restoreDailyProgress(
+      encode({ ...valid, playedWords: ["notaword"] }),
+      "2026-09-22",
+      puzzle,
+      dictionary,
+    ),
+    undefined,
+  );
+  assert.equal(
+    restoreDailyProgress("%not-json", "2026-09-22", puzzle, dictionary),
+    undefined,
+  );
 });

@@ -51,6 +51,16 @@ export type GeneratedPuzzle = Readonly<{
   statesByDepth: readonly number[];
 }>;
 
+export type DailyProgress = Readonly<{
+  game: GameState;
+  playedWords: readonly string[];
+  answerRevealed: boolean;
+  gaveUp: boolean;
+  selectedPath: readonly number[];
+  wildcardLetter: string;
+  selectedAnswerIndex: number;
+}>;
+
 export type RandomSource = () => number;
 
 type WordCandidate = Readonly<{
@@ -95,6 +105,20 @@ const TOTAL_LETTER_WEIGHT = LETTER_FREQUENCIES.reduce(
   (total, [, weight]) => total + weight,
   0,
 );
+const DAILY_PROGRESS_VERSION = 1;
+const MAX_DAILY_PROGRESS_COOKIE_LENGTH = 4096;
+
+type SavedDailyProgress = {
+  version: number;
+  dateKey: string;
+  board: string;
+  active: string;
+  playedWords: string[];
+  answerRevealed: boolean;
+  selectedPath: number[];
+  wildcardLetter: string;
+  selectedAnswerIndex: number;
+};
 
 export const HEX_DIRECTIONS: readonly HexCoordinate[] = [
   { q: 1, r: 0, s: -1 },
@@ -570,6 +594,112 @@ export function selectPuzzle(
     dictionary,
     dailyMode ? seededRandom(localDateKey(now)) : random,
   );
+}
+
+export function serializeDailyProgress(
+  dateKey: string,
+  puzzle: GeneratedPuzzle,
+  progress: DailyProgress,
+): string {
+  const saved: SavedDailyProgress = {
+    version: DAILY_PROGRESS_VERSION,
+    dateKey,
+    board: puzzle.board.join(""),
+    active: progress.game.active.map((isActive) => (isActive ? "1" : "0")).join(""),
+    playedWords: [...progress.playedWords],
+    answerRevealed: progress.answerRevealed,
+    selectedPath: [...progress.selectedPath],
+    wildcardLetter: progress.wildcardLetter,
+    selectedAnswerIndex: progress.selectedAnswerIndex,
+  };
+
+  return encodeURIComponent(JSON.stringify(saved));
+}
+
+export function restoreDailyProgress(
+  encodedProgress: string | undefined,
+  dateKey: string,
+  puzzle: GeneratedPuzzle,
+  dictionary: DictionaryIndex,
+): DailyProgress | undefined {
+  if (
+    !encodedProgress ||
+    encodedProgress.length > MAX_DAILY_PROGRESS_COOKIE_LENGTH
+  ) {
+    return undefined;
+  }
+
+  try {
+    const parsed: unknown = JSON.parse(decodeURIComponent(encodedProgress));
+    if (typeof parsed !== "object" || parsed === null) {
+      return undefined;
+    }
+
+    const saved = parsed as Partial<SavedDailyProgress>;
+    if (
+      saved.version !== DAILY_PROGRESS_VERSION ||
+      saved.dateKey !== dateKey ||
+      saved.board !== puzzle.board.join("") ||
+      typeof saved.active !== "string" ||
+      !new RegExp(`^[01]{${TILE_COUNT}}$`).test(saved.active) ||
+      !Array.isArray(saved.playedWords) ||
+      !saved.playedWords.every(
+        (word) =>
+          typeof word === "string" &&
+          /^[a-z]+$/.test(word) &&
+          dictionary.words.has(word),
+      ) ||
+      typeof saved.answerRevealed !== "boolean" ||
+      !Array.isArray(saved.selectedPath) ||
+      !saved.selectedPath.every(Number.isInteger) ||
+      !isValidPath(saved.selectedPath) ||
+      typeof saved.wildcardLetter !== "string" ||
+      !/^[a-z]?$/.test(saved.wildcardLetter) ||
+      typeof saved.selectedAnswerIndex !== "number" ||
+      !Number.isInteger(saved.selectedAnswerIndex) ||
+      saved.selectedAnswerIndex < -1 ||
+      saved.selectedAnswerIndex >= puzzle.solution.length
+    ) {
+      return undefined;
+    }
+
+    const active = saved.active.split("").map((value) => value === "1");
+    const completed = isWinningMask(activeMask(active));
+    const gaveUp = saved.answerRevealed && !completed;
+    const runEnded = completed || gaveUp;
+    const selectedPath = [...saved.selectedPath];
+    const wildcardLetter = saved.wildcardLetter;
+    const selectedWildcard = selectedPath.some(
+      (tileIndex) => puzzle.board[tileIndex] === WILDCARD,
+    );
+
+    if (
+      (saved.playedWords.length === 0 && active.some(Boolean)) ||
+      (saved.playedWords.length > 0 && active.filter(Boolean).length < 2) ||
+      (runEnded && (selectedPath.length > 0 || wildcardLetter !== "")) ||
+      (!selectedWildcard && wildcardLetter !== "") ||
+      (!saved.answerRevealed && saved.selectedAnswerIndex !== -1)
+    ) {
+      return undefined;
+    }
+
+    return {
+      game: {
+        board: [...puzzle.board],
+        active,
+        wordsUsed: saved.playedWords.length,
+        completed,
+      },
+      playedWords: [...saved.playedWords],
+      answerRevealed: saved.answerRevealed,
+      gaveUp,
+      selectedPath,
+      wildcardLetter,
+      selectedAnswerIndex: saved.selectedAnswerIndex,
+    };
+  } catch {
+    return undefined;
+  }
 }
 
 function createCoordinates(): HexCoordinate[] {
