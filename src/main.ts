@@ -236,61 +236,30 @@ let tutorialStepIndex = 0;
 let activeDateKey = localDateKey(new Date());
 
 clearButton.addEventListener("click", clearSelection);
-submitButton.addEventListener("click", () => submitSelection("button"));
+submitButton.addEventListener("click", submitSelection);
 showTutorialButton.addEventListener("click", () => openTutorial("manual"));
 closeTutorialButton.addEventListener("click", () => tutorialDialog.close());
 tutorialBackButton.addEventListener("click", () => {
-  trackEvent(
-    `tutorial-back-step-${tutorialStepIndex + 1}`,
-    `Tutorial back from step ${tutorialStepIndex + 1}`,
-  );
   tutorialStepIndex = Math.max(0, tutorialStepIndex - 1);
   renderTutorial();
 });
 tutorialNextButton.addEventListener("click", () => {
   if (tutorialStepIndex === TUTORIAL_STEPS.length - 1) {
-    trackEvent("tutorial-completed", "Tutorial completed");
     tutorialDialog.close();
     return;
   }
-  trackEvent(
-    `tutorial-next-step-${tutorialStepIndex + 1}`,
-    `Tutorial next from step ${tutorialStepIndex + 1}`,
-  );
   tutorialStepIndex += 1;
   renderTutorial();
 });
-tutorialDialog.addEventListener("close", () => {
-  rememberTutorialSeen();
-  trackEvent(
-    `tutorial-closed-step-${tutorialStepIndex + 1}`,
-    `Tutorial closed on step ${tutorialStepIndex + 1}`,
-  );
-});
+tutorialDialog.addEventListener("close", rememberTutorialSeen);
 revealAnswerButton.addEventListener("click", requestRevealAnswer);
-showResultButton.addEventListener("click", () => {
-  trackEvent("result-reopened", "Result reopened");
-  openResultDialog();
-});
-cancelRevealButton.addEventListener("click", () => {
-  trackEvent("reveal-cancelled", "Answer reveal cancelled");
-  revealWarningDialog.close();
-});
-revealWarningDialog.addEventListener("cancel", () => {
-  trackEvent("reveal-cancelled", "Answer reveal cancelled");
-});
+showResultButton.addEventListener("click", openResultDialog);
+cancelRevealButton.addEventListener("click", () => revealWarningDialog.close());
 confirmRevealButton.addEventListener("click", revealAnswer);
 closeResultDialogButton.addEventListener("click", () => resultDialog.close());
-resultDialog.addEventListener("close", () => {
-  trackEvent("result-closed", "Result closed");
-});
 copyResultButton.addEventListener("click", () => void copyShareResult());
 wildcardInput.addEventListener("input", () => {
   wildcardInput.value = wildcardInput.value.replace(/[^a-z]/gi, "").slice(0, 1);
-  trackEvent(
-    wildcardInput.value ? "wildcard-set" : "wildcard-cleared",
-    wildcardInput.value ? "Wildcard letter set" : "Wildcard letter cleared",
-  );
   renderSelection();
   persistDailyProgress();
 });
@@ -303,7 +272,7 @@ document.addEventListener("keydown", (event) => {
     !revealWarningDialog.open &&
     !resultDialog.open
   ) {
-    submitSelection("keyboard");
+    submitSelection();
   }
 });
 
@@ -376,20 +345,10 @@ async function startPuzzle(): Promise<void> {
   renderSolution();
   render();
   persistDailyProgress();
-  const restoredProgress =
-    saved !== undefined &&
-    (saved.playedWords.length > 0 ||
-      saved.selectedPath.length > 0 ||
-      saved.answerRevealed);
-  trackEvent(
-    restoredProgress ? "puzzle-resumed" : "puzzle-loaded",
-    restoredProgress ? "Puzzle resumed" : "Puzzle loaded",
-  );
 }
 
 async function checkForNewDailyPuzzle(): Promise<void> {
   if (DAILY_MODE && localDateKey(new Date()) !== activeDateKey) {
-    trackEvent("daily-rollover", "New daily puzzle loaded");
     await startPuzzle();
   }
 }
@@ -406,18 +365,14 @@ function chooseTile(tileIndex: number): void {
   if (existingPosition !== -1) {
     if (existingPosition === selectedPath.length - 1) {
       selectedPath.pop();
-      trackEvent("tile-deselected", "Last tile deselected");
       showMessage("Removed the last tile.", "neutral");
     } else {
-      trackEvent("tile-repeat-rejected", "Repeated tile rejected");
       showMessage("A tile cannot be used twice in the same word.", "error");
     }
   } else if (previousIndex !== undefined && !areAdjacent(previousIndex, tileIndex)) {
-    trackEvent("tile-nonadjacent-rejected", "Nonadjacent tile rejected");
     showMessage("The next tile must touch the previous tile.", "error");
   } else {
     selectedPath.push(tileIndex);
-    trackEvent("tile-selected", "Tile selected");
     showMessage("", "neutral");
   }
 
@@ -429,7 +384,6 @@ function chooseTile(tileIndex: number): void {
 }
 
 function clearSelection(): void {
-  trackEvent("selection-cleared", "Selection cleared");
   selectedPath = [];
   revealedPath = [];
   wildcardInput.value = "";
@@ -438,13 +392,11 @@ function clearSelection(): void {
   persistDailyProgress();
 }
 
-function submitSelection(source: "button" | "keyboard"): void {
-  trackEvent(`word-submit-${source}`, `Word submitted with ${source}`);
+function submitSelection(): void {
   const word = selectedWord();
   const result = submitWord(game, selectedPath, word, dictionary.words);
 
   if (!result.accepted) {
-    trackEvent("word-rejected", "Word rejected");
     selectedPath = [];
     wildcardInput.value = "";
     render();
@@ -457,10 +409,6 @@ function submitSelection(source: "button" | "keyboard"): void {
   }
 
   game = result.state;
-  trackEvent("word-accepted", "Word accepted");
-  if (selectedPath.some((tileIndex) => game.board[tileIndex] === WILDCARD)) {
-    trackEvent("word-accepted-with-wildcard", "Word accepted with wildcard");
-  }
   playedWords.push(word);
   selectedPath = [];
   wildcardInput.value = "";
@@ -610,10 +558,6 @@ function renderSolution(): void {
         selectedPath = [];
         wildcardInput.value = "";
         revealedPath = alreadyRevealed ? [] : path;
-        trackEvent(
-          alreadyRevealed ? "solution-path-hidden" : "solution-path-shown",
-          alreadyRevealed ? "Solution path hidden" : "Solution path shown",
-        );
         render();
         persistDailyProgress();
         showMessage(
@@ -634,11 +578,9 @@ function requestRevealAnswer(): void {
     return;
   }
   if (game.completed) {
-    trackEvent("answer-reveal-after-completion", "Answer requested after completion");
     revealAnswer();
     return;
   }
-  trackEvent("reveal-requested", "Answer reveal requested");
   revealWarningDialog.showModal();
 }
 
@@ -716,7 +658,6 @@ async function copyShareResult(): Promise<void> {
   const text = shareText();
   try {
     await navigator.clipboard.writeText(text);
-    trackEvent("share-copy-succeeded", "Share result copy succeeded");
     resultShareStatusElement.textContent = "Copied! Paste it anywhere.";
     manualShareElement.hidden = true;
   } catch {
