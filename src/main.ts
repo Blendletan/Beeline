@@ -280,6 +280,7 @@ document
   .querySelector<HTMLScriptElement>("script[data-goatcounter]")
   ?.addEventListener("load", flushAnalyticsHits);
 
+trackKofiDonateWidget();
 void loadGame();
 
 async function loadGame(): Promise<void> {
@@ -885,6 +886,27 @@ function flushAnalyticsHits(): void {
   const hits = pendingAnalyticsHits.splice(0);
   for (const hit of hits) {
     sendAnalyticsHit(hit);
+  }
+}
+
+function trackKofiDonateWidget(): void {
+  const buttonFrames = document.querySelectorAll<HTMLIFrameElement>(
+    'iframe[id^="kofi-wo-container"]',
+  );
+
+  for (const frame of buttonFrames) {
+    const button = frame.contentDocument?.querySelector<HTMLElement>(
+      ".floatingchat-donate-button",
+    );
+    button?.addEventListener(
+      "click",
+      () => {
+        if (button.classList.contains("closed")) {
+          trackEvent("kofi-donate-click", "Ko-fi donate widget opened");
+        }
+      },
+      { capture: true },
+    );
   }
 }
 
