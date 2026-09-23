@@ -403,6 +403,11 @@ h1 {
   color: #26332e;
 }
 
+iframe.floatingchat-container {
+  width: 254px !important;
+  max-width: calc(100vw - 2rem) !important;
+}
+
 .app-dialog {
   width: min(100% - 2rem, 32rem);
   max-height: min(90vh, 44rem);
@@ -759,6 +764,7 @@ h1 {
 
   .site-footer {
     width: min(100% - 1rem, 720px);
+    padding-bottom: 6.5rem;
   }
 
   .game-header {

@@ -127,11 +127,6 @@
 
   <footer class="site-footer">
     <a href="mailto:robertparkinson@shaw.ca">Send feedback</a>
-    <a
-      href="https://www.paypal.com/paypalme/AceBlender"
-      target="_blank"
-      rel="noopener noreferrer"
-    >Support more puzzles ☕</a>
   </footer>
 
   <dialog
@@ -227,6 +222,15 @@
     </div>
   </dialog>
 
+  <script src="https://storage.ko-fi.com/cdn/scripts/overlay-widget.js"></script>
+  <script>
+    kofiWidgetOverlay.draw('randomlittlepuzzles', {
+      'type': 'floating-chat',
+      'floating-chat.donateButton.text': 'Support More Puzzles',
+      'floating-chat.donateButton.background-color': '#00b9fe',
+      'floating-chat.donateButton.text-color': '#fff'
+    });
+  </script>
   <script type="module" src="./build/main.js"></script>
 </body>
 </html>
