@@ -19,6 +19,24 @@ const DAILY_MODE = true;
 const SHARE_URL = "https://blendletan.github.io/Beeline/";
 const TUTORIAL_STORAGE_KEY = "beelineTutorialSeenV2";
 const DAILY_PROGRESS_COOKIE_NAME = "beelineDailyProgress";
+const MAX_PENDING_ANALYTICS_HITS = 100;
+
+type GoatCounterHit = {
+  readonly path: string;
+  readonly title: string;
+  readonly event: true;
+  readonly no_session: true;
+};
+
+declare global {
+  interface Window {
+    goatcounter?: {
+      count?: (hit: GoatCounterHit) => void;
+    };
+  }
+}
+
+const pendingAnalyticsHits: GoatCounterHit[] = [];
 
 const TUTORIAL_BOARD = [
   ..."htaoinohrdlucnfwypvbgejqxzetao?nshrdlucefwypvbgljqxzetloinshw",
@@ -218,30 +236,61 @@ let tutorialStepIndex = 0;
 let activeDateKey = localDateKey(new Date());
 
 clearButton.addEventListener("click", clearSelection);
-submitButton.addEventListener("click", submitSelection);
-showTutorialButton.addEventListener("click", openTutorial);
+submitButton.addEventListener("click", () => submitSelection("button"));
+showTutorialButton.addEventListener("click", () => openTutorial("manual"));
 closeTutorialButton.addEventListener("click", () => tutorialDialog.close());
 tutorialBackButton.addEventListener("click", () => {
+  trackEvent(
+    `tutorial-back-step-${tutorialStepIndex + 1}`,
+    `Tutorial back from step ${tutorialStepIndex + 1}`,
+  );
   tutorialStepIndex = Math.max(0, tutorialStepIndex - 1);
   renderTutorial();
 });
 tutorialNextButton.addEventListener("click", () => {
   if (tutorialStepIndex === TUTORIAL_STEPS.length - 1) {
+    trackEvent("tutorial-completed", "Tutorial completed");
     tutorialDialog.close();
     return;
   }
+  trackEvent(
+    `tutorial-next-step-${tutorialStepIndex + 1}`,
+    `Tutorial next from step ${tutorialStepIndex + 1}`,
+  );
   tutorialStepIndex += 1;
   renderTutorial();
 });
-tutorialDialog.addEventListener("close", rememberTutorialSeen);
+tutorialDialog.addEventListener("close", () => {
+  rememberTutorialSeen();
+  trackEvent(
+    `tutorial-closed-step-${tutorialStepIndex + 1}`,
+    `Tutorial closed on step ${tutorialStepIndex + 1}`,
+  );
+});
 revealAnswerButton.addEventListener("click", requestRevealAnswer);
-showResultButton.addEventListener("click", openResultDialog);
-cancelRevealButton.addEventListener("click", () => revealWarningDialog.close());
+showResultButton.addEventListener("click", () => {
+  trackEvent("result-reopened", "Result reopened");
+  openResultDialog();
+});
+cancelRevealButton.addEventListener("click", () => {
+  trackEvent("reveal-cancelled", "Answer reveal cancelled");
+  revealWarningDialog.close();
+});
+revealWarningDialog.addEventListener("cancel", () => {
+  trackEvent("reveal-cancelled", "Answer reveal cancelled");
+});
 confirmRevealButton.addEventListener("click", revealAnswer);
 closeResultDialogButton.addEventListener("click", () => resultDialog.close());
+resultDialog.addEventListener("close", () => {
+  trackEvent("result-closed", "Result closed");
+});
 copyResultButton.addEventListener("click", () => void copyShareResult());
 wildcardInput.addEventListener("input", () => {
   wildcardInput.value = wildcardInput.value.replace(/[^a-z]/gi, "").slice(0, 1);
+  trackEvent(
+    wildcardInput.value ? "wildcard-set" : "wildcard-cleared",
+    wildcardInput.value ? "Wildcard letter set" : "Wildcard letter cleared",
+  );
   renderSelection();
   persistDailyProgress();
 });
@@ -254,9 +303,13 @@ document.addEventListener("keydown", (event) => {
     !revealWarningDialog.open &&
     !resultDialog.open
   ) {
-    submitSelection();
+    submitSelection("keyboard");
   }
 });
+
+document
+  .querySelector<HTMLScriptElement>("script[data-goatcounter]")
+  ?.addEventListener("load", flushAnalyticsHits);
 
 void loadGame();
 
@@ -271,9 +324,10 @@ async function loadGame(): Promise<void> {
     await startPuzzle();
     window.setInterval(() => void checkForNewDailyPuzzle(), 30_000);
     if (!hasSeenTutorial()) {
-      openTutorial();
+      openTutorial("first-visit");
     }
   } catch (error) {
+    trackEvent("load-failed", "Game failed to load");
     console.error(error);
     loadingElement.textContent = "Beeline could not load. Please refresh and try again.";
     loadingElement.classList.add("error");
@@ -322,10 +376,20 @@ async function startPuzzle(): Promise<void> {
   renderSolution();
   render();
   persistDailyProgress();
+  const restoredProgress =
+    saved !== undefined &&
+    (saved.playedWords.length > 0 ||
+      saved.selectedPath.length > 0 ||
+      saved.answerRevealed);
+  trackEvent(
+    restoredProgress ? "puzzle-resumed" : "puzzle-loaded",
+    restoredProgress ? "Puzzle resumed" : "Puzzle loaded",
+  );
 }
 
 async function checkForNewDailyPuzzle(): Promise<void> {
   if (DAILY_MODE && localDateKey(new Date()) !== activeDateKey) {
+    trackEvent("daily-rollover", "New daily puzzle loaded");
     await startPuzzle();
   }
 }
@@ -342,14 +406,18 @@ function chooseTile(tileIndex: number): void {
   if (existingPosition !== -1) {
     if (existingPosition === selectedPath.length - 1) {
       selectedPath.pop();
+      trackEvent("tile-deselected", "Last tile deselected");
       showMessage("Removed the last tile.", "neutral");
     } else {
+      trackEvent("tile-repeat-rejected", "Repeated tile rejected");
       showMessage("A tile cannot be used twice in the same word.", "error");
     }
   } else if (previousIndex !== undefined && !areAdjacent(previousIndex, tileIndex)) {
+    trackEvent("tile-nonadjacent-rejected", "Nonadjacent tile rejected");
     showMessage("The next tile must touch the previous tile.", "error");
   } else {
     selectedPath.push(tileIndex);
+    trackEvent("tile-selected", "Tile selected");
     showMessage("", "neutral");
   }
 
@@ -361,6 +429,7 @@ function chooseTile(tileIndex: number): void {
 }
 
 function clearSelection(): void {
+  trackEvent("selection-cleared", "Selection cleared");
   selectedPath = [];
   revealedPath = [];
   wildcardInput.value = "";
@@ -369,11 +438,13 @@ function clearSelection(): void {
   persistDailyProgress();
 }
 
-function submitSelection(): void {
+function submitSelection(source: "button" | "keyboard"): void {
+  trackEvent(`word-submit-${source}`, `Word submitted with ${source}`);
   const word = selectedWord();
   const result = submitWord(game, selectedPath, word, dictionary.words);
 
   if (!result.accepted) {
+    trackEvent("word-rejected", "Word rejected");
     selectedPath = [];
     wildcardInput.value = "";
     render();
@@ -386,6 +457,10 @@ function submitSelection(): void {
   }
 
   game = result.state;
+  trackEvent("word-accepted", "Word accepted");
+  if (selectedPath.some((tileIndex) => game.board[tileIndex] === WILDCARD)) {
+    trackEvent("word-accepted-with-wildcard", "Word accepted with wildcard");
+  }
   playedWords.push(word);
   selectedPath = [];
   wildcardInput.value = "";
@@ -393,6 +468,15 @@ function submitSelection(): void {
   persistDailyProgress();
 
   if (game.completed) {
+    const overPerfect = game.wordsUsed - puzzle.perfect;
+    trackEvent(
+      overPerfect === 0
+        ? "puzzle-completed-perfect"
+        : `puzzle-completed-plus-${overPerfect}`,
+      overPerfect === 0
+        ? "Puzzle completed with a Perfect score"
+        : `Puzzle completed ${overPerfect} over Perfect`,
+    );
     const comparison =
       game.wordsUsed === puzzle.perfect
         ? "Perfect score!"
@@ -526,6 +610,10 @@ function renderSolution(): void {
         selectedPath = [];
         wildcardInput.value = "";
         revealedPath = alreadyRevealed ? [] : path;
+        trackEvent(
+          alreadyRevealed ? "solution-path-hidden" : "solution-path-shown",
+          alreadyRevealed ? "Solution path hidden" : "Solution path shown",
+        );
         render();
         persistDailyProgress();
         showMessage(
@@ -546,9 +634,11 @@ function requestRevealAnswer(): void {
     return;
   }
   if (game.completed) {
+    trackEvent("answer-reveal-after-completion", "Answer requested after completion");
     revealAnswer();
     return;
   }
+  trackEvent("reveal-requested", "Answer reveal requested");
   revealWarningDialog.showModal();
 }
 
@@ -561,6 +651,10 @@ function revealAnswer(): void {
   }
 
   gaveUp = !game.completed;
+  trackEvent(
+    gaveUp ? "puzzle-given-up" : "answer-revealed-after-completion",
+    gaveUp ? "Puzzle given up" : "Answer revealed after completion",
+  );
   answerRevealed = true;
   selectedPath = [];
   wildcardInput.value = "";
@@ -618,12 +712,15 @@ function shareText(): string {
 }
 
 async function copyShareResult(): Promise<void> {
+  trackEvent("share-copy", "Share result copy requested");
   const text = shareText();
   try {
     await navigator.clipboard.writeText(text);
+    trackEvent("share-copy-succeeded", "Share result copy succeeded");
     resultShareStatusElement.textContent = "Copied! Paste it anywhere.";
     manualShareElement.hidden = true;
   } catch {
+    trackEvent("share-manual-fallback", "Share result manual-copy fallback shown");
     resultShareStatusElement.textContent = "Copy the text below to share your result.";
     manualShareTextElement.value = text;
     manualShareElement.hidden = false;
@@ -632,7 +729,11 @@ async function copyShareResult(): Promise<void> {
   }
 }
 
-function openTutorial(): void {
+function openTutorial(source: "first-visit" | "manual"): void {
+  trackEvent(
+    `tutorial-opened-${source}`,
+    source === "first-visit" ? "First-visit tutorial opened" : "Tutorial opened manually",
+  );
   tutorialStepIndex = 0;
   renderTutorial();
   tutorialDialog.showModal();
@@ -809,6 +910,41 @@ function showMessage(
 ): void {
   messageElement.textContent = message;
   messageElement.className = `message ${tone}`;
+}
+
+function trackEvent(path: string, title: string): void {
+  const hit: GoatCounterHit = {
+    path: `beeline-${path}`,
+    title: `Beeline: ${title}`,
+    event: true,
+    no_session: true,
+  };
+
+  if (!sendAnalyticsHit(hit)) {
+    if (pendingAnalyticsHits.length < MAX_PENDING_ANALYTICS_HITS) {
+      pendingAnalyticsHits.push(hit);
+    }
+  }
+}
+
+function sendAnalyticsHit(hit: GoatCounterHit): boolean {
+  if (typeof window.goatcounter?.count !== "function") {
+    return false;
+  }
+
+  try {
+    window.goatcounter.count(hit);
+  } catch {
+    // Analytics must never interrupt play.
+  }
+  return true;
+}
+
+function flushAnalyticsHits(): void {
+  const hits = pendingAnalyticsHits.splice(0);
+  for (const hit of hits) {
+    sendAnalyticsHit(hit);
+  }
 }
 
 function requiredElement<T extends HTMLElement>(id: string): T {
