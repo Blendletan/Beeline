@@ -186,6 +186,7 @@ const noWordsElement = requiredElement<HTMLParagraphElement>("no-words");
 const playedWordsElement = requiredElement<HTMLOListElement>("played-words");
 const revealAnswerButton = requiredElement<HTMLButtonElement>("reveal-answer");
 const showResultButton = requiredElement<HTMLButtonElement>("show-result");
+const morePuzzlesLink = requiredElement<HTMLAnchorElement>("more-puzzles-link");
 const revealedAnswerElement = requiredElement<HTMLElement>("revealed-answer");
 const solutionWordsElement = requiredElement<HTMLOListElement>("solution-words");
 const tutorialDialog = requiredElement<HTMLDialogElement>("tutorial-dialog");
@@ -254,6 +255,9 @@ tutorialNextButton.addEventListener("click", () => {
 tutorialDialog.addEventListener("close", rememberTutorialSeen);
 revealAnswerButton.addEventListener("click", requestRevealAnswer);
 showResultButton.addEventListener("click", openResultDialog);
+morePuzzlesLink.addEventListener("click", () => {
+  trackEvent("more-puzzles-click", "More puzzles clicked");
+});
 cancelRevealButton.addEventListener("click", () => revealWarningDialog.close());
 confirmRevealButton.addEventListener("click", revealAnswer);
 closeResultDialogButton.addEventListener("click", () => resultDialog.close());
