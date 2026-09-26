@@ -597,10 +597,13 @@ function revealAnswer(): void {
     revealWarningDialog.close();
   }
 
-  gaveUp = !game.completed;
+  const revealedAfterCompletion = game.completed;
+  if (!revealedAfterCompletion) {
+    gaveUp = true;
+  }
   trackEvent(
-    gaveUp ? "puzzle-given-up" : "answer-revealed-after-completion",
-    gaveUp ? "Puzzle given up" : "Answer revealed after completion",
+    revealedAfterCompletion ? "answer-revealed-after-completion" : "puzzle-given-up",
+    revealedAfterCompletion ? "Answer revealed after completion" : "Puzzle given up",
   );
   answerRevealed = true;
   selectedPath = [];
@@ -609,12 +612,14 @@ function revealAnswer(): void {
   render();
   persistDailyProgress();
   showMessage(
-    gaveUp
-      ? "Answer revealed. This run has ended."
-      : "Perfect answer revealed. Your result is unchanged.",
+    revealedAfterCompletion
+      ? "Perfect answer revealed. Your result is unchanged."
+      : "Answer revealed. This run has ended.",
     "neutral",
   );
-  openResultDialog();
+  if (!revealedAfterCompletion) {
+    openResultDialog();
+  }
 }
 
 function runEnded(): boolean {
