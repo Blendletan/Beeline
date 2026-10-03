@@ -179,7 +179,7 @@ test("dictionary parsing allows two-letter words and rejects one-letter entries"
   const dictionary = parseDictionary(
     readFileSync(new URL("../cleanedDictionary.txt", import.meta.url), "utf8"),
   );
-  assert.equal(dictionary.size, 64_342);
+  assert.equal(dictionary.size, 64_384);
   assert.equal(dictionary.has("aah"), true);
 });
 

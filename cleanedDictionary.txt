@@ -90,6 +90,7 @@ ablative
 ablatives
 ablaze
 able
+abled
 abler
 ablest
 ablution
@@ -1146,6 +1147,7 @@ ahoy
 aid
 aide
 aided
+aider
 aides
 aiding
 aids
@@ -2064,6 +2066,7 @@ antibiotic
 antibiotics
 antibodies
 antibody
+antic
 antichoice
 anticipate
 anticipated
@@ -2194,6 +2197,7 @@ apiece
 aping
 aplenty
 aplomb
+apnea
 apocalypse
 apocalyptic
 apocryphal
@@ -3447,6 +3451,7 @@ ax
 axe
 axed
 axes
+axial
 axing
 axiom
 axiomatic
@@ -3733,6 +3738,7 @@ bale
 baled
 baleful
 balefully
+baler
 bales
 baling
 balk
@@ -4883,6 +4889,7 @@ bewitched
 bewitches
 bewitching
 beyond
+bezel
 bhaji
 bhajis
 bhangra
@@ -4916,6 +4923,7 @@ bicentenaries
 bicentenary
 bicentennial
 bicentennials
+bicep
 biceps
 bicepses
 bicker
@@ -11341,6 +11349,7 @@ congresswoman
 congresswomen
 congruence
 congruent
+conic
 conical
 conifer
 coniferous
@@ -12078,6 +12087,7 @@ corduroy
 corduroys
 core
 cored
+corer
 cores
 corgi
 corgis
@@ -15684,6 +15694,7 @@ diligence
 diligent
 diligently
 dill
+dilly
 dillydallied
 dillydallies
 dillydally
@@ -18157,6 +18168,7 @@ elasticised
 elasticity
 elasticized
 elastics
+elate
 elated
 elation
 elbow
@@ -19428,6 +19440,7 @@ esteem
 esteemed
 esteeming
 esteems
+ester
 esthete
 esthetes
 esthetic
@@ -21207,6 +21220,7 @@ filches
 filching
 file
 filed
+filer
 files
 filet
 fileted
@@ -23663,6 +23677,7 @@ gazebos
 gazed
 gazelle
 gazelles
+gazer
 gazes
 gazette
 gazetteer
@@ -24326,6 +24341,7 @@ glycerin
 glycerine
 glycerol
 glycogen
+glyph
 gnarled
 gnarly
 gnash
@@ -27621,6 +27637,7 @@ huskiness
 husking
 husks
 husky
+hussy
 hustings
 hustle
 hustled
@@ -27936,6 +27953,7 @@ ikon
 ikons
 ilea
 ileum
+iliac
 ilk
 ilks
 ill
@@ -33238,6 +33256,7 @@ lumbermen
 lumbers
 lumberyard
 lumberyards
+lumen
 luminaries
 luminary
 luminescence
@@ -35604,6 +35623,7 @@ misstep
 missteps
 missus
 missuses
+missy
 mist
 mistake
 mistaken
@@ -36894,6 +36914,7 @@ nastiness
 nasturtium
 nasturtiums
 nasty
+natal
 natch
 nation
 national
@@ -38151,6 +38172,7 @@ ockers
 octagon
 octagonal
 octagons
+octal
 octane
 octave
 octaves
@@ -38859,6 +38881,7 @@ outfox
 outfoxed
 outfoxes
 outfoxing
+outgo
 outgoing
 outgoings
 outgrew
@@ -39033,6 +39056,7 @@ ovals
 ovarian
 ovaries
 ovary
+ovate
 ovation
 ovations
 oven
@@ -39433,6 +39457,7 @@ overwrought
 overzealous
 oviduct
 oviducts
+ovine
 ovoid
 ovulate
 ovulated
@@ -40693,6 +40718,7 @@ penknives
 penmanship
 pennant
 pennants
+penne
 penned
 pennies
 penniless
@@ -41612,6 +41638,7 @@ pinecone
 pinecones
 pined
 pines
+piney
 ping
 pinged
 pinging
@@ -42043,6 +42070,7 @@ pliable
 pliancy
 pliant
 plied
+plier
 pliers
 plies
 plight
@@ -45237,6 +45265,7 @@ ramblings
 rambunctious
 ramekin
 ramekins
+ramen
 ramification
 ramifications
 ramified
@@ -45706,6 +45735,7 @@ reawaken
 reawakened
 reawakening
 reawakens
+rebar
 rebate
 rebates
 rebel
@@ -46032,6 +46062,7 @@ recurrent
 recurring
 recurs
 recursive
+recut
 recyclable
 recycle
 recycled
@@ -51648,6 +51679,7 @@ sirs
 sis
 sisal
 sises
+sissy
 sister
 sisterhood
 sisterhoods
@@ -52984,6 +53016,7 @@ soon
 sooner
 soonest
 soot
+sooth
 soothe
 soothed
 soothes
@@ -56196,6 +56229,7 @@ swarms
 swarthier
 swarthiest
 swarthy
+swash
 swashbuckling
 swastika
 swastikas
@@ -58532,6 +58566,7 @@ torturers
 tortures
 torturing
 torturous
+torus
 tosh
 toss
 tossed
@@ -59398,6 +59433,7 @@ trousseaus
 trousseaux
 trout
 trouts
+trove
 trowel
 trowels
 truancy
@@ -59499,6 +59535,7 @@ tsunami
 tsunamis
 tub
 tuba
+tubal
 tubas
 tubbier
 tubbiest
@@ -59908,6 +59945,7 @@ ululation
 ululations
 um
 umber
+umbra
 umbrage
 umbrella
 umbrellas
@@ -60487,6 +60525,7 @@ unfavourable
 unfavourably
 unfazed
 unfeasible
+unfed
 unfeeling
 unfeelingly
 unfeigned
@@ -60958,6 +60997,7 @@ unselfish
 unselfishly
 unselfishness
 unsentimental
+unset
 unsettle
 unsettled
 unsettles
@@ -61089,6 +61129,7 @@ unwary
 unwashed
 unwavering
 unwaveringly
+unwed
 unwelcome
 unwelcoming
 unwell
@@ -61577,6 +61618,7 @@ vault
 vaulted
 vaulting
 vaults
+vaunt
 vaunted
 veal
 vector
