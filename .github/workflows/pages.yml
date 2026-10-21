@@ -22,29 +22,10 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v6
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24
-          cache: pnpm
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Test
-        run: pnpm test
-
-      - name: Compile TypeScript
-        run: pnpm build
-
       - name: Assemble static site
         run: |
-          mkdir -p _site/build
-          cp index.html style.css cleanedDictionary.txt beeline-logo.png rmlp-logo-mark.svg _site/
-          cp build/*.js _site/build/
+          mkdir -p _site
+          cp index.html _site/
           touch _site/.nojekyll
 
       - name: Configure GitHub Pages
